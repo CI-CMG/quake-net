@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: QuakeNet Buckets
+
+Parameters:
+  StackPrefix:
+    Type: String
+
+Mappings:
+  BucketNameMap:
+    QuakeNetSourceBucket:
+      Value: quake-net-source
+
+#TODO update deletion policy and drain
+Resources:
+  QuakeNetSourceBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName:
+        Fn::Sub:
+          - ${StackPrefix}-${AWS::AccountId}-${Suffix}
+          - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]

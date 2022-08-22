@@ -1,0 +1,36 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww32480\viewh15900\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Author: Aaron Sweeney\
+Date: 2018-03-29\
+\
+The directory /nfs/hazards_ingest/earthquakes/PDEs was created as a place to hold the scripts that Austin Curtis wrote to parse\
+National Earthquake Information Center (NEIC) Preliminary Determination of Epicenters (PDE) files [QuakeML] and return\
+simpler results [TSV].\
+\
+Purpose of directories:\
+/nfs/hazards_ingest/earthquakes/PDEs/src -> contains get_PDE_QuakeML.sh script to download PDE files [QuakeML] from NEIC\
+/nfs/hazards_ingest/earthquakes/PDEs/data -> contains the downloaded PDE files [QuakeML]\
+/nfs/hazards_ingest/earthquakes/PDEs/quakeml -> contains Austin's bash script runMe.sh which calls his Groovy script parseQuakeML.groovy\
+/nfs/hazards_ingest/earthquakes/PDEs/PDE_2013_to_2016 -> contains the TSV results from previous runs\
+\
+Running:\
+\
+To download PDEs (if file already exists on waterlevel, it won't be downloaded again):\
+$ cd /nfs/hazards_ingest/earthquakes/PDEs/src\
+$ ./get_PDE_QuakeML.sh\
+\
+To read PDEs [QuakeML] and write TSV results, copy one (or more) of the QuakeML zipfiles to the location of Austin's runMe.sh script.\
+Note: His script will delete the zipfile after processing it, hence we keep a copy of it in /nfs/hazards_ingest/earthquakes/PDEs/data.\
+$ cp -p /nfs/hazards_ingest/earthquakes/PDEs/data/hazards.cr.usgs.gov/NEICPDE/quakeml/201752_cat_quakeml.zip /nfs/hazards_ingest/earthquakes/PDEs/quakeml\
+$ cd /nfs/hazards_ingest/earthquakes/PDEs/quakeml\
+$ nice -n 19 ./runMe.sh\
+\
+To get files to my computer use SecureFx, then file -> quick connect to waterlevel -> find files and copy and paste\
+\
+\
+NOTE: \'93201752\'94 is the file that will be unzipped/formatted. Best to start with \'9301\'94 and work to \'9352\'94. Those numbers represent weeks of year.}

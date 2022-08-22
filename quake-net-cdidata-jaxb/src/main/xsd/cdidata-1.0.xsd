@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+  <xs:complexType name="location">
+    <xs:all>
+      <!--only on geo type-->
+      <xs:element name="city" minOccurs="0" type="xs:string"/>
+      <xs:element name="cdi" minOccurs="0" type="xs:double"/>
+      <xs:element name="nresp" minOccurs="0" type="xs:int"/>
+      <xs:element name="dist" minOccurs="0" type="xs:double"/>
+      <xs:element name="lat" minOccurs="0" type="xs:double"/>
+      <xs:element name="lon" minOccurs="0" type="xs:double"/>
+      <xs:element name="name" minOccurs="0" type="xs:string"/>
+      <!--only if US-->
+      <xs:element name="state" minOccurs="0" type="xs:string"/>
+    </xs:all>
+    <!--Format = Santo Domingo::Pichincha::Ecuador or 99685-->
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="cdi">
+    <xs:sequence>
+      <xs:element name="location" minOccurs="0" maxOccurs="unbounded" type="location"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="cdidata">
+    <xs:sequence>
+      <xs:element name="cdi" type="cdi"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="cdidata" type="cdidata"/>
+
+</xs:schema>

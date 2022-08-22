@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bindings
+  xmlns="http://java.sun.com/xml/ns/jaxb"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+  xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+  version="2.1">
+
+  <globalBindings generateValueClass="true" generateElementClass="true" >
+    <javaType name="java.time.Instant"  xmlType="xs:dateTime" hasNsContext="false"
+      parseMethod="edu.colorado.cires.mgg.quakenet.jaxb.DateAdapter.parseDate"
+      printMethod="edu.colorado.cires.mgg.quakenet.jaxb.DateAdapter.printDate"/>
+    <xjc:simple/>
+  </globalBindings>
+
+
+</bindings>

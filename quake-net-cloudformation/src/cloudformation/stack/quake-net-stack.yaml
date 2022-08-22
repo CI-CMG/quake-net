@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Trackline Ingest Stack
+
+Parameters:
+  StackPrefix:
+    Description: A prefix that identifies this stack
+    Type: String
+  RolePermissionsBoundary:
+    Description: An optional permissions boundary to associate with roles
+    Type: String
+    Default: ""
+  LogRetentionInDays:
+    Description: The number of days to keep CloudWatch logs
+    Type: Number
+    MinValue: 0
+    Default: 30
+  EventGrabberLambdaMemorySize:
+    Description: The amount of memory for the event grabber lambda
+    Type: Number
+    MinValue: 256
+    Default: 512
+  EventGrabberLambdaTimeout:
+    Description: The timeout in seconds for the event grabber lambda
+    Type: Number
+    MinValue: 10
+    MaxValue: 900
+    Default: 480
+  EventGrabberCronExpression:
+    Description: The EventBridge Schedule Expression to check for new event data
+    Type: String
+    Default: 'cron(0 1 * * ? *)'
+
+
+
+
+
+Resources:
+
+#  BucketStack:
+#    Type: AWS::CloudFormation::Stack
+#    Properties:
+#      Parameters:
+#        StagingBucketName: !Ref StagingBucketName
+#        OutputBucketName: !Ref OutputBucketName
+#        ApprovedBucketName: !Ref ApprovedBucketName
+#        EnvironmentType:
+#          Fn::ImportValue: !Sub ${StackPrefix}-trackline-environment-type
+#        StackPrefix: !Ref StackPrefix
+#      TemplateURL:
+#        Fn::Sub:
+#          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/bucket-stack.yaml
+#          - DeploymentBucketName:
+#              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
+#
+#
+#
+#  TopicStack:
+#    Type: AWS::CloudFormation::Stack
+#    Properties:
+#      Parameters:
+#        EmailSubscription: !Ref EmailSubscription
+#      TemplateURL:
+#        Fn::Sub:
+#          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/topic-stack.yaml
+#          - DeploymentBucketName:
+#              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
+
+  CronStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DeploymentBucketName:
+          Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+        RolePermissionsBoundary: !Ref RolePermissionsBoundary
+        EventGrabberLambdaMemorySize: !Ref EventGrabberLambdaMemorySize
+        EventGrabberLambdaTimeout: !Ref EventGrabberLambdaTimeout
+        EventGrabberCronExpression: !Ref EventGrabberCronExpression
+        LogRetentionInDays: !Ref LogRetentionInDays
+        Version: @project.version@@dashTimestamp@
+      TemplateURL:
+        Fn::Sub:
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/cron-stack.yaml
+          - DeploymentBucketName:
+              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
+
+

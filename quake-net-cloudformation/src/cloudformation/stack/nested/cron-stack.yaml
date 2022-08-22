@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: QuakeNet Cron Trigger Resources
+
+Parameters:
+  DeploymentBucketName:
+    Description: The deployment bucket
+    Type: String
+  RolePermissionsBoundary:
+    Description: An optional permissions boundary to associate with roles
+    Type: String
+  InitiatorLambdaMemorySize:
+    Description: The amount of memory for the initiator lambda
+    Type: Number
+  InitiatorLambdaTimeout:
+    Description: The timeout in seconds for the initiator lambda
+    Type: Number
+  InitiatorCronExpression:
+    Description: The EventBridge Schedule Expression to check for new event data
+    Default: 'cron(0 1 * * ? *)'
+    Type: String
+
+
+Conditions:
+  HasRolePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - ""
+          - !Ref RolePermissionsBoundary
+
+Resources:
+  StatusLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary:
+        Fn::If:
+          - HasRolePermissionsBoundary
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+          - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Logging
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+#        - PolicyName: DynamoDB
+#          PolicyDocument:
+#            Version: 2012-10-17
+#            Statement:
+#              - Effect: Allow
+#                Resource: !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${StatusDynamoDbTable}
+#                Action:
+#                  - dynamodb:GetItem
+#                  - dynamodb:UpdateItem
+#                  - dynamodb:PutItem
+#                  - dynamodb:Query
+#                  - dynamodb:Scan
+#                  - dynamodb:DeleteItem
+#        - PolicyName: SNS
+#          PolicyDocument:
+#            Version: 2012-10-17
+#            Statement:
+#              - Effect: Allow
+#                Resource: !Ref EmailTopicArn
+#                Action:
+#                  - sns:Publish
+
+
+  InitiatorLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Queries USGS for earthquake events
+      Code:
+        S3Bucket: !Ref DeploymentBucketName
+        S3Key: !Sub lambda/quake-net-event-grabber-${Version}-lambda.zip
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.initiator.InitiatorLambdaHandler::handleRequest
+      Runtime: java11
+      MemorySize: !Ref InitiatorLambdaMemorySize
+      Timeout: !Ref InitiatorLambdaTimeout
+      ReservedConcurrentExecutions: 1
+      Role: !GetAtt StatusLambdaRole.Arn
+      Environment:
+        Variables:
+          STACK_NAME: !Ref AWS::StackName
+
+  CronEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Cron trigger to grab new quake events
+      ScheduleExpression: !Ref InitiatorCronExpression
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt InitiatorLambda.Arn
+          Id: EventGrabberCron
