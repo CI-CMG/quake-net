@@ -25,10 +25,10 @@
     <module>quake-net-cdidata-jaxb</module>
     <module>quake-net-pdf-generator</module>
     <module>quake-net-initiator</module>
-    <module>quake-net-cloudformation</module>
-    <module>quake-net-processor</module>
     <module>quake-net-event-grabber</module>
     <module>quake-net-monthy-pdf-generator</module>
+    <module>quake-net-cloudformation</module>
+<!--    <module>quake-net-processor</module>-->
   </modules>
 
   <dependencyManagement>

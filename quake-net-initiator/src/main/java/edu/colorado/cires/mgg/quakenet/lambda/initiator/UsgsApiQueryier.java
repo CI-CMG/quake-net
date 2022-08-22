@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,8 +36,8 @@ public class UsgsApiQueryier {
 
         URI uri = new URIBuilder("https://earthquake.usgs.gov/fdsnws/event/1/query")
             .addParameter("format", "quakeml")
-            .addParameter("starttime", apiParameters.getStartTime().toString())
-            .addParameter("endtime", apiParameters.getEndTime().toString())
+            .addParameter("starttime", queryRange.getStart().atStartOfDay(ZoneId.of("UTC")).toInstant().toString())
+            .addParameter("endtime", queryRange.getEnd().plusDays(1L).atStartOfDay(ZoneId.of("UTC")).toInstant().toString())
             .addParameter("includeallorigins", "false")
             .addParameter("includeallmagnitudes", "false")
             .addParameter("orderby", "time-asc")

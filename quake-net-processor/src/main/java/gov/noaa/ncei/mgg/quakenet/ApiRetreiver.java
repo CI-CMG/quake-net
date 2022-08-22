@@ -1,10 +1,8 @@
 package gov.noaa.ncei.mgg.quakenet;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.itextpdf.text.DocumentException;
 import gov.noaa.ncei.mgg.quakenet.domain.QnEvent;
 import gov.noaa.ncei.mgg.quakenet.geojson.GeoJson;
@@ -37,6 +35,7 @@ import org.quakeml.xmlns.quakeml._1.Quakeml;
 public class ApiRetreiver {
 
   private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
+
   public static void main(String[] args) throws JAXBException, IOException, URISyntaxException, DocumentException {
     ApiParameters apiParameters = new ApiParameters();
     apiParameters.setStartTime(DTF.parse("2022-08-01 00:00:00", Instant::from));
@@ -65,7 +64,8 @@ public class ApiRetreiver {
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   private static final int PAGE_SIZE = 200;
 
-  public static void queryEventSummaryApi(ApiParameters apiParameters, Consumer<List<QnEvent>> eventConsumer) throws IOException, URISyntaxException, JAXBException {
+  public static void queryEventSummaryApi(ApiParameters apiParameters, Consumer<List<QnEvent>> eventConsumer)
+      throws IOException, URISyntaxException, JAXBException {
     int resultCount = -1;
     int page = 0;
     while (resultCount != 0) {
@@ -125,48 +125,47 @@ public class ApiRetreiver {
 
   public static void queryEventDetailApi(QnEvent event) throws IOException, URISyntaxException, JAXBException {
 
-      try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+    try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
 
-        URI uri = new URIBuilder("https://earthquake.usgs.gov/fdsnws/event/1/query")
-            .addParameter("format", "quakeml")
-            .addParameter("eventid", event.getEventId())
-            .build();
+      URI uri = new URIBuilder("https://earthquake.usgs.gov/fdsnws/event/1/query")
+          .addParameter("format", "quakeml")
+          .addParameter("eventid", event.getEventId())
+          .build();
 
-        HttpGet httpGet = new HttpGet(uri.toString());
-        try (CloseableHttpResponse response1 = httpclient.execute(httpGet)) {
-          if (response1.getCode() == 200) {
-            HttpEntity entity1 = response1.getEntity();
-            try {
-              try (InputStream in = entity1.getContent()) {
-                JAXBContext context = JAXBContext.newInstance(Quakeml.class);
-                String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
-                System.out.println(xml);
-                Quakeml quakeml = (Quakeml) context.createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-                DataParser.parseEnrichmentDetails(quakeml, event);
-              }
-            } finally {
-              EntityUtils.consume(entity1);
+      HttpGet httpGet = new HttpGet(uri.toString());
+      try (CloseableHttpResponse response1 = httpclient.execute(httpGet)) {
+        if (response1.getCode() == 200) {
+          HttpEntity entity1 = response1.getEntity();
+          try {
+            try (InputStream in = entity1.getContent()) {
+              JAXBContext context = JAXBContext.newInstance(Quakeml.class);
+              String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
+              System.out.println(xml);
+              Quakeml quakeml = (Quakeml) context.createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+              DataParser.parseEnrichmentDetails(quakeml, event);
             }
-          } else if (response1.getCode() == 204) {
-            //TODO
-            System.out.println(response1.getCode() + " " + response1.getReasonPhrase());
-            System.out.println(event);
-            System.out.println("^^^^^ No More Results");
-          } else {
-            //TODO
-            System.out.println(response1.getCode() + " " + response1.getReasonPhrase());
+          } finally {
+            EntityUtils.consume(entity1);
           }
-
+        } else if (response1.getCode() == 204) {
+          //TODO
+          System.out.println(response1.getCode() + " " + response1.getReasonPhrase());
+          System.out.println(event);
+          System.out.println("^^^^^ No More Results");
+        } else {
+          //TODO
+          System.out.println(response1.getCode() + " " + response1.getReasonPhrase());
         }
 
       }
+
+    }
 
   }
 
   public static void queryCdi(String url, Consumer<Cdidata> eventConsumer) throws IOException, URISyntaxException, JAXBException {
 
     try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-
 
       System.out.println(url);
       HttpGet httpGet = new HttpGet(url);
@@ -195,7 +194,6 @@ public class ApiRetreiver {
     }
 
   }
-
 
 
   public static void queryEventDetailGeoJsonApi(QnEvent event) throws IOException, URISyntaxException {
