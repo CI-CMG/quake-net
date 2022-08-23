@@ -10,21 +10,12 @@
     <version>1.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>quake-net-event-grabber</artifactId>
+  <artifactId>quake-net-event-details-grabber</artifactId>
+
   <dependencies>
     <dependency>
       <groupId>edu.colorado.cires.mgg.quake-net</groupId>
       <artifactId>query-net-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>quake-net-quake-ml-jaxb</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>quake-net-cdidata-jaxb</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -43,15 +34,15 @@
       <artifactId>aws-lambda-java-log4j2</artifactId>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-lambda-java-events</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
-      <artifactId>sns</artifactId>
+      <artifactId>s3</artifactId>
     </dependency>
 
     <dependency>

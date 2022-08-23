@@ -1,4 +1,4 @@
-package edu.colorado.cires.mgg.quakenet.lambda.initiator;
+package edu.colorado.cires.mgg.quakenet.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;

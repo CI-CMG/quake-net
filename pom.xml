@@ -26,9 +26,9 @@
     <module>quake-net-pdf-generator</module>
     <module>quake-net-initiator</module>
     <module>quake-net-event-grabber</module>
-    <module>quake-net-monthy-pdf-generator</module>
+    <module>quake-net-event-details-grabber</module>
+    <module>quake-net-report-initiator</module>
     <module>quake-net-cloudformation</module>
-<!--    <module>quake-net-processor</module>-->
   </modules>
 
   <dependencyManagement>
@@ -48,6 +48,11 @@
       </dependency>
       <dependency>
         <groupId>com.amazonaws</groupId>
+        <artifactId>aws-lambda-java-events</artifactId>
+        <version>3.11.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.amazonaws</groupId>
         <artifactId>aws-lambda-java-log4j2</artifactId>
         <version>1.5.1</version>
       </dependency>
@@ -56,6 +61,12 @@
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
         <version>2.3.3</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.github.ci-cmg</groupId>
+        <artifactId>aws-s3-outputstream</artifactId>
+        <version>1.1.0</version>
       </dependency>
 
       <dependency>

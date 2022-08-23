@@ -18,6 +18,10 @@ Parameters:
     Description: The EventBridge Schedule Expression to check for new event data
     Default: 'cron(0 1 * * ? *)'
     Type: String
+  DefaultStartDate:
+    Description: The earliest date to check for events when initializing the earthquake data set
+    Default: '1660-01-01'
+    Type: String
 
 
 Conditions:
@@ -95,6 +99,7 @@ Resources:
       Environment:
         Variables:
           STACK_NAME: !Ref AWS::StackName
+          DEFAULT_START_DATE: !Ref DefaultStartDate
 
   CronEventRule:
     Type: AWS::Events::Rule

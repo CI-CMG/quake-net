@@ -8,32 +8,33 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class QueryRangeDeterminer {
 
-  private final EventGrabberProperties eventGrabberProperties;
+  private final InitiatorProperties initiatorProperties;
   private final S3Client s3;
 
-  public QueryRangeDeterminer(EventGrabberProperties eventGrabberProperties, S3Client s3) {
-    this.eventGrabberProperties = eventGrabberProperties;
+  public QueryRangeDeterminer(InitiatorProperties initiatorProperties, S3Client s3) {
+    this.initiatorProperties = initiatorProperties;
     this.s3 = s3;
   }
 
+  // downloads/2012/05/2012-05-10/usgs-info-2012-05-10.json.gz
   public QueryRange getQueryRange() {
     ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
-        .bucket(eventGrabberProperties.getDownloadBucket())
+        .bucket(initiatorProperties.getDownloadBucket())
         .prefix("downloads/")
         .build();
 
-    LocalDate maxDate = null;
+    LocalDate maxDate = LocalDate.parse(initiatorProperties.getDefaultStartDate());
 
     ListObjectsV2Response listObjectsResponse;
     do {
       listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
       for (S3Object s3Object : listObjectsResponse.contents()) {
         String[] parts = s3Object.key().split("/");
-        String date = parts[2];
-        String file = parts[3];
+        String date = parts[3];
+        String file = parts[4];
         if(file.equals("usgs-info-" + date + ".json.gz")) {
           LocalDate localDate = LocalDate.parse(date);
-          if (maxDate == null || localDate.isAfter(maxDate)) {
+          if (localDate.isAfter(maxDate)) {
             maxDate = localDate;
           }
         }

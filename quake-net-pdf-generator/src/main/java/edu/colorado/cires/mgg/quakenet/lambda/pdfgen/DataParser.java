@@ -1,24 +1,17 @@
-package edu.colorado.cires.mgg.quakenet.lambda.initiator;
+package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
-
-import edu.colorado.cires.mgg.quakenet.geojson.CdiXml;
-import edu.colorado.cires.mgg.quakenet.geojson.Dyfi;
-import edu.colorado.cires.mgg.quakenet.geojson.DyfiContents;
-import edu.colorado.cires.mgg.quakenet.geojson.FeatureProperties;
-import edu.colorado.cires.mgg.quakenet.geojson.GeoJson;
-import edu.colorado.cires.mgg.quakenet.geojson.Products;
 import edu.colorado.cires.mgg.quakenet.model.QnCdi;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import gov.noaa.ncei.xmlns.cdidata.Location;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -27,20 +20,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import org.apache.commons.io.IOUtils;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.quakeml.xmlns.bed._1.Comment;
 import org.quakeml.xmlns.bed._1.Event;
 import org.quakeml.xmlns.bed._1.EventDescription;
@@ -51,124 +38,89 @@ import org.quakeml.xmlns.bed._1.Origin;
 import org.quakeml.xmlns.bed._1.RealQuantity;
 import org.quakeml.xmlns.bed._1.TimeQuantity;
 import org.quakeml.xmlns.quakeml._1.Quakeml;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 public class DataParser {
 
-  public static void main(String[] args) throws JAXBException, FileNotFoundException {
-    JAXBContext context = JAXBContext.newInstance(Quakeml.class);
-    Quakeml quakeml = (Quakeml) context.createUnmarshaller()
-        .unmarshal(new FileReader(
-            "/Users/cslater/projects/quake-net/quake-net-processor/src/test/resources/201330_1374538994_C000IRGM_24_Long.quakeml_Verified.xml"));
-    parseQuakeSummary(quakeml);
+  private final PdfGenProperties properties;
+  private final S3Client s3Client;
+
+  public DataParser(PdfGenProperties properties, S3Client s3Client) {
+    this.properties = properties;
+    this.s3Client = s3Client;
   }
 
-  public static List<QnEvent> parseQuakeSummary(Quakeml quakeml) {
-
-    List<QnEvent> results = new ArrayList<>();
-
-    EventParameters eventParameters = quakeml.getEventParameters();
-
-    // 0..1 eventParameters
-    if (eventParameters != null) {
-
-      // 0..* events
-      List<Event> events = getEvents(eventParameters);
-      for (Event event : events) {
-
-        QnEvent qnEvent = new QnEvent();
-        results.add(qnEvent);
-
-        Optional<String> maybeEventId = getEventId(event);
-        maybeEventId.ifPresent(qnEvent::setEventId);
-
-//        // 0..* description
-//        List<EventDescription> descriptions = getDescription(event);
-//
-//        Optional<String> earthquakeName = getEarthquakeName(descriptions);
-//        earthquakeName.ifPresent(qnEvent::setEarthquakeName);
-//
-//        Optional<String> where = getWhere(descriptions);
-//        where.ifPresent(qnEvent::setFlinnEngdahlRegion);
-//
-//        Optional<String> regionName = getRegionName(descriptions);
-//        regionName.ifPresent(qnEvent::setRegionName);
-//
-//        Optional<String> feltDescription = getFeltReport(descriptions);
-//        feltDescription.ifPresent(qnEvent::setFeltDescription);
-//
-//        setDescriptions(
-//            qnEvent,
-//            descriptions,
-//            new HashSet<>(Arrays.asList(
-//                EventDescriptionType.FLINN_ENGDAHL_REGION,
-//                EventDescriptionType.EARTHQUAKE_NAME,
-//                EventDescriptionType.REGION_NAME,
-//                EventDescriptionType.FELT_REPORT
-//            )));
-//
-//        // 0..* comment
-//        List<Comment> comments = getComments(event);
-//        for (Comment comment : comments) {
-//          // 1..1 text
-//          Optional<String> maybeText = getCommentText(comment);
-//          maybeText.ifPresent(qnEvent::addComment);
-//        }
-
-        // 0..* magnitude
-        // When parsing from the API there should only be one Magnitude
-        Optional<Magnitude> maybeMagnitude = getMagnitude(event);
-
-        // 0..1 type
-        Optional<String> maybeMagnitudeType = maybeMagnitude.flatMap(DataParser::getMagnitudeType);
-        maybeMagnitudeType.ifPresent(qnEvent::setMagnitudeType);
-
-        // 1..1 mag
-        Optional<RealQuantity> maybeMag = maybeMagnitude.flatMap(DataParser::getMag);
-        // 1..1 value
-        Optional<Double> maybeMagValue = maybeMag.flatMap(DataParser::getRealQuantityValues);
-        maybeMagValue.ifPresent(qnEvent::setMagnitude);
-
-        // 0..* origin
-        // When parsing from the API there should only be one origin
-        Optional<Origin> maybeOrigin = getOrigin(event);
-
-        // 1..1
-        Optional<TimeQuantity> maybeTime = maybeOrigin.flatMap(DataParser::getTime);
-        // 1..1
-        Optional<Instant> maybeTimeValue = maybeTime.flatMap(DataParser::getTimeValue);
-        maybeTimeValue.ifPresent(qnEvent::setOriginTime);
-
-        // 1..1
-        Optional<RealQuantity> maybeLatitude = maybeOrigin.flatMap(DataParser::getLatitude);
-        // 1..1
-        Optional<Double> maybeLatitudeValue = maybeLatitude.flatMap(DataParser::getRealQuantityValues);
-        maybeLatitudeValue.ifPresent(qnEvent::setLatitude);
-
-        // 1..1
-        Optional<RealQuantity> maybeLongitude = maybeOrigin.flatMap(DataParser::getLongitude);
-        // 1..1
-        Optional<Double> maybeLongitudeValue = maybeLongitude.flatMap(DataParser::getRealQuantityValues);
-        maybeLongitudeValue.ifPresent(qnEvent::setLongitude);
-
-        // 0..1
-        Optional<RealQuantity> maybeDepth = maybeOrigin.flatMap(DataParser::getDepth);
-        // 0..1
-        Optional<Double> maybeDepthValue = maybeDepth.flatMap(DataParser::getRealQuantityValues);
-        maybeDepthValue.ifPresent(qnEvent::setDepth);
-
-      }
-    }
+  public static List<KeySet> getRequiredKeys(String yearStr, String monthStr) {
+    List<KeySet> results = new ArrayList<>(31);
+    LocalDate date = LocalDate.parse(yearStr + "-" + monthStr + "-01");
+    final Month targetMonth = date.getMonth();
+    Month month;
+    do {
+      results.add(new KeySet(
+          "downloads/" + yearStr + "/" + monthStr + "/" + date + "/event-details-" + date + ".xml.gz",
+          "downloads/" + yearStr + "/" + monthStr + "/" + date + "/event-cdi-" + date + ".xml.gz"
+      ));
+      date = date.plusDays(1);
+      month = date.getMonth();
+    } while (month.equals(targetMonth));
     return results;
   }
 
-  public static void parseCdi(Cdidata cdidata, QnEvent qnEvent) {
-//    qnEvent.getCdis()
-//    for(Location location : cdidata.getCdi().getLocations()) {
-//
-//    }
+  public Optional<Cdidata> readCdi(String key) {
+    GetObjectRequest objectRequest = GetObjectRequest
+        .builder()
+        .bucket(properties.getBucketName())
+        .key(key)
+        .build();
+    try (InputStream in = new GZIPInputStream(new BufferedInputStream(s3Client.getObject(objectRequest)))) {
+      return Optional.of((Cdidata) JAXBContext.newInstance(Cdidata.class).createUnmarshaller().unmarshal(in));
+    } catch (NoSuchKeyException e) {
+      return Optional.empty();
+    } catch (IOException | JAXBException e) {
+      throw new IllegalStateException("Unable to read CDI data", e);
+    }
   }
 
-  public static void parseEnrichmentDetails(Quakeml quakeml, QnEvent qnEvent) {
+
+  public Optional<Quakeml> readQuakeMl(String key) {
+    GetObjectRequest objectRequest = GetObjectRequest
+        .builder()
+        .bucket(properties.getBucketName())
+        .key(key)
+        .build();
+    try (InputStream in = new GZIPInputStream(new BufferedInputStream(s3Client.getObject(objectRequest)))) {
+      return Optional.of((Quakeml) JAXBContext.newInstance(Quakeml.class).createUnmarshaller().unmarshal(in));
+    } catch (NoSuchKeyException e) {
+      return Optional.empty();
+    } catch (IOException | JAXBException e) {
+      throw new IllegalStateException("Unable to read QuakeML data", e);
+    }
+  }
+
+  public static void enrichCdi(QnEvent event, Cdidata cdidata) {
+    if(cdidata.getCdi() != null && cdidata.getCdi().getLocations() != null) {
+      for (Location location : cdidata.getCdi().getLocations()) {
+        QnCdi cdi = new QnCdi();
+        cdi.setCdi(location.getCdi());
+        cdi.setNumResp(location.getNresp());
+        cdi.setDistKm(location.getDist());
+        cdi.setLatitude(location.getLat());
+        cdi.setLongitude(location.getLon());
+        cdi.setName(location.getName());
+        cdi.setState(location.getState());
+        cdi.setCode(location.getLocationName());
+        event.addCdi(cdi);
+      }
+    }
+  }
+
+  public static QnEvent parseQuakeDetails(Quakeml quakeml) {
+
+    QnEvent qnEvent = new QnEvent();
 
     EventParameters eventParameters = quakeml.getEventParameters();
 
@@ -177,6 +129,54 @@ public class DataParser {
 
       // There should only be one from the detail API call
       Event event = getEvents(eventParameters).get(0);
+
+
+      Optional<String> maybeEventId = getEventId(event);
+      maybeEventId.ifPresent(qnEvent::setEventId);
+
+      // 0..* magnitude
+      Optional<Magnitude> maybeMagnitude = getPreferredMagnitudeId(event).flatMap(id -> getMagnitude(event, id));
+
+      // 0..1 type
+      Optional<String> maybeMagnitudeType = maybeMagnitude.flatMap(DataParser::getMagnitudeType);
+      maybeMagnitudeType.ifPresent(qnEvent::setMagnitudeType);
+
+      // 1..1 mag
+      Optional<RealQuantity> maybeMag = maybeMagnitude.flatMap(DataParser::getMag);
+      // 1..1 value
+      Optional<Double> maybeMagValue = maybeMag.flatMap(DataParser::getRealQuantityValues);
+      maybeMagValue.ifPresent(qnEvent::setMagnitude);
+
+      // 0..* origin
+      // When parsing from the API there should only be one origin
+      Optional<Origin> maybeOrigin = getPreferredOriginId(event).flatMap(id -> getOrigin(event, id));
+
+      // 1..1
+      Optional<TimeQuantity> maybeTime = maybeOrigin.flatMap(DataParser::getTime);
+      // 1..1
+      Optional<Instant> maybeTimeValue = maybeTime.flatMap(DataParser::getTimeValue);
+      maybeTimeValue.ifPresent(qnEvent::setOriginTime);
+
+      // 1..1
+      Optional<RealQuantity> maybeLatitude = maybeOrigin.flatMap(DataParser::getLatitude);
+      // 1..1
+      Optional<Double> maybeLatitudeValue = maybeLatitude.flatMap(DataParser::getRealQuantityValues);
+      maybeLatitudeValue.ifPresent(qnEvent::setLatitude);
+
+      // 1..1
+      Optional<RealQuantity> maybeLongitude = maybeOrigin.flatMap(DataParser::getLongitude);
+      // 1..1
+      Optional<Double> maybeLongitudeValue = maybeLongitude.flatMap(DataParser::getRealQuantityValues);
+      maybeLongitudeValue.ifPresent(qnEvent::setLongitude);
+
+      // 0..1
+      Optional<RealQuantity> maybeDepth = maybeOrigin.flatMap(DataParser::getDepth);
+      // 0..1
+      Optional<Double> maybeDepthValue = maybeDepth.flatMap(DataParser::getRealQuantityValues);
+      maybeDepthValue.ifPresent(qnEvent::setDepth);
+
+
+
 
       // 0..* description
       List<EventDescription> descriptions = getDescription(event);
@@ -212,90 +212,7 @@ public class DataParser {
       }
 
     }
-
-  }
-
-  public static void queryCdi(String url, Consumer<Cdidata> eventConsumer) throws IOException, URISyntaxException, JAXBException {
-
-    try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-
-
-      System.out.println(url);
-      HttpGet httpGet = new HttpGet(url);
-      try (CloseableHttpResponse response1 = httpclient.execute(httpGet)) {
-        if (response1.getCode() == 200) {
-          HttpEntity entity1 = response1.getEntity();
-          try {
-            try (InputStream in = entity1.getContent()) {
-              String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
-              System.out.println(xml);
-              JAXBContext context = JAXBContext.newInstance(Cdidata.class);
-              Cdidata cdidata = (Cdidata) context.createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-
-              eventConsumer.accept(cdidata);
-            }
-          } finally {
-            EntityUtils.consume(entity1);
-          }
-        } else {
-          //TODO
-          System.out.println(response1.getCode() + " " + response1.getReasonPhrase());
-        }
-
-      }
-
-    }
-
-  }
-
-
-  public static void parseGeoJsonEnrichmentDetails(GeoJson geoJson, QnEvent qnEvent) {
-
-    FeatureProperties properties = geoJson.getProperties();
-    if(properties != null) {
-      Products products = properties.getProducts();
-      if (products != null) {
-        List<Dyfi> dyfis = products.getDyfi();
-        if(!dyfis.isEmpty()) {
-          Dyfi dyfi = dyfis.get(0);
-          DyfiContents contents = dyfi.getContents();
-          if(contents != null) {
-            //TODO check as back up?
-//            CdiXml cdiGeoXml = contents.getCdiGeoXml();
-
-            CdiXml cdiZipXml = contents.getCdiZipXml();
-            if(cdiZipXml != null) {
-              String url = cdiZipXml.getUrl();
-              if(url != null) {
-                try {
-                  queryCdi(url, cdidata -> {
-                    if(cdidata.getCdi() != null && cdidata.getCdi().getLocations() != null) {
-                      for (Location location : cdidata.getCdi().getLocations()) {
-                        QnCdi cdi = new QnCdi();
-                        cdi.setCdi(location.getCdi());
-                        cdi.setNumResp(location.getNresp());
-                        cdi.setDistKm(location.getDist());
-                        cdi.setLatitude(location.getLat());
-                        cdi.setLongitude(location.getLon());
-                        cdi.setName(location.getName());
-                        cdi.setState(location.getState());
-                        cdi.setCode(location.getLocationName());
-                        qnEvent.addCdi(cdi);
-                      }
-                    }
-                  });
-                } catch (IOException | URISyntaxException | JAXBException e) {
-                  //TODO
-                  System.out.println("Unable to parse CDI data");
-                  e.printStackTrace();
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
+    return qnEvent;
   }
 
   private static List<Event> getEvents(EventParameters eventParameters) {
@@ -314,9 +231,18 @@ public class DataParser {
     return getElements(Comment.class, event::getDescriptionsAndCommentsAndFocalMechanisms, "comment");
   }
 
-  //When parsing from the API, there should only be one magnitude
-  private static Optional<Magnitude> getMagnitude(Event event) {
-    return getSingleElement(Magnitude.class, event::getDescriptionsAndCommentsAndFocalMechanisms, "magnitude");
+  private static Optional<Magnitude> getMagnitude(Event event, String preferredMagnitudeId) {
+    return getElements(Magnitude.class, event::getDescriptionsAndCommentsAndFocalMechanisms, "magnitude")
+        .stream().filter(element -> preferredMagnitudeId.equals(element.getPublicID()))
+        .findFirst();
+  }
+
+  private static Optional<String> getPreferredOriginId(Event event) {
+    return getSingleElement(String.class, event::getDescriptionsAndCommentsAndFocalMechanisms, "preferredOriginID");
+  }
+
+  private static Optional<String> getPreferredMagnitudeId(Event event) {
+    return getSingleElement(String.class, event::getDescriptionsAndCommentsAndFocalMechanisms, "preferredMagnitudeID");
   }
 
   private static List<EventDescription> getDescription(Event event) {
@@ -404,9 +330,11 @@ public class DataParser {
         .collect(Collectors.toList());
   }
 
-  //When parsing from the API, there should only be one origin
-  private static Optional<Origin> getOrigin(Event event) {
-    return getSingleElement(Origin.class, event::getDescriptionsAndCommentsAndFocalMechanisms, "origin");
+  private static Optional<Origin> getOrigin(Event event, String preferredOriginId) {
+    return getElements(Origin.class, event::getDescriptionsAndCommentsAndFocalMechanisms, "origin")
+        .stream()
+        .filter(element -> preferredOriginId.equals(element.getPublicID()))
+        .findFirst();
   }
 
   private static Optional<String> getWhere(List<EventDescription> descriptions) {
