@@ -2,5 +2,9 @@
   {
     "ParameterKey": "StackPrefix",
     "ParameterValue": "@user.name@-dev-quake-net"
+  },
+  {
+    "ParameterKey": "LambdaRolePermissionsBoundary",
+    "ParameterValue": "Customer_Admin_PermissionBoundary"
   }
 ]
