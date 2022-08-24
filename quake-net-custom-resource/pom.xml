@@ -2,36 +2,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>quake-net-parent</artifactId>
     <groupId>edu.colorado.cires.mgg.quake-net</groupId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
-  <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>quake-net-report-initiator</artifactId>
+  <artifactId>quake-net-custom-resource</artifactId>
 
   <dependencies>
-    <dependency>
-      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>query-net-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>quake-net-quake-ml-jaxb</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>quake-net-cdidata-jaxb</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.amazonaws</groupId>
@@ -43,14 +25,20 @@
       <artifactId>aws-lambda-java-log4j2</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-lambda-java-events</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>sns</artifactId>
+      <groupId>com.sunrun</groupId>
+      <artifactId>cfn-response</artifactId>
     </dependency>
 
     <dependency>
@@ -99,5 +87,6 @@
       </plugin>
     </plugins>
   </build>
+
 
 </project>

@@ -28,6 +28,7 @@
     <module>quake-net-event-grabber</module>
     <module>quake-net-event-details-grabber</module>
     <module>quake-net-report-initiator</module>
+    <module>quake-net-custom-resource</module>
     <module>quake-net-cloudformation</module>
   </modules>
 
@@ -116,6 +117,11 @@
         <version>${jackson.version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>com.sunrun</groupId>
+        <artifactId>cfn-response</artifactId>
+        <version>1.2.2</version>
+      </dependency>
 
       <dependency>
         <groupId>com.itextpdf</groupId>

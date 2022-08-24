@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: QuakeNet Queues
+
+Parameters:
+  StackPrefix:
+    Type: String
+  VisibilityTimeoutSeconds:
+    Description: The timeout in seconds to keep in-flight messages hidden
+    Type: Number
+  MessageMaxReceiveCount:
+    Description: The number of times a message can be received in a queue before sending to the DLQ
+    Type: Number
+
+Resources:
+
+  InitiatorCompleteTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-initiator
+
+  UsgsDateQueryCompleteTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-date-query
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-dlq
+
+  UsgsDateQueryQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: !Ref VisibilityTimeoutSeconds
+      QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-date-query
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: !Ref MessageMaxReceiveCount
+
+  UsgsEventDetailsQueryQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: !Ref VisibilityTimeoutSeconds
+      QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-details-query
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: !Ref MessageMaxReceiveCount
+
+  UsgsDateQueryCompleteTopicToUsgsEventDetailsQueryQueue:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref UsgsEventDetailsQueryQueue
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublishToTopic
+            Resource: !GetAtt UsgsEventDetailsQueryQueue.Arn
+            Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref UsgsDateQueryCompleteTopic
+
+  InitiatorCompleteTopicToUsgsDateQueryQueue:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref UsgsDateQueryQueue
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublishToTopic
+            Resource: !GetAtt UsgsDateQueryQueue.Arn
+            Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref InitiatorCompleteTopic
+
+
+Outputs:
+  InitiatorCompleteTopicArn:
+    Value: !Ref InitiatorCompleteTopic
+  UsgsDateQueryCompleteTopicArn:
+    Value: !Ref UsgsDateQueryCompleteTopic
+  UsgsDateQueryQueueUrl:
+    Value: !Ref UsgsDateQueryQueue
+  UsgsDateQueryQueueArn:
+    Value: !GetAtt UsgsDateQueryQueue.Arn
+  UsgsEventDetailsQueryQueueUrl:
+    Value: !Ref UsgsEventDetailsQueryQueue
+  UsgsEventDetailsQueryQueueArn:
+    Value: !GetAtt UsgsEventDetailsQueryQueue.Arn

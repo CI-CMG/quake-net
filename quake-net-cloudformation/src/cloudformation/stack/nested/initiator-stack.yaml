@@ -22,6 +22,19 @@ Parameters:
     Description: The earliest date to check for events when initializing the earthquake data set
     Default: '1660-01-01'
     Type: String
+  InitiatorCompleteTopicArn:
+    Type: String
+  QuakeNetSourceBucketName:
+    Type: String
+  HttpRequestTimeoutMs:
+    Description: The request timeout in milliseconds for HTTP requests
+    Type: Number
+  HttpConnectionTimeoutMs:
+    Description: The connection timeout in milliseconds for HTTP requests
+    Type: Number
+  Version:
+    Description: The build version
+    Type: String
 
 
 Conditions:
@@ -32,7 +45,7 @@ Conditions:
           - !Ref RolePermissionsBoundary
 
 Resources:
-  StatusLambdaRole:
+  InitiatorLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary:
@@ -60,46 +73,38 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-#        - PolicyName: DynamoDB
-#          PolicyDocument:
-#            Version: 2012-10-17
-#            Statement:
-#              - Effect: Allow
-#                Resource: !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${StatusDynamoDbTable}
-#                Action:
-#                  - dynamodb:GetItem
-#                  - dynamodb:UpdateItem
-#                  - dynamodb:PutItem
-#                  - dynamodb:Query
-#                  - dynamodb:Scan
-#                  - dynamodb:DeleteItem
-#        - PolicyName: SNS
-#          PolicyDocument:
-#            Version: 2012-10-17
-#            Statement:
-#              - Effect: Allow
-#                Resource: !Ref EmailTopicArn
-#                Action:
-#                  - sns:Publish
+        - PolicyName: SNS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Ref InitiatorCompleteTopicArn
+                Action:
+                  - sns:Publish
 
 
   InitiatorLambda:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Queries USGS for earthquake events
+      Description: Determines dates to query for USGS earthquake events
       Code:
         S3Bucket: !Ref DeploymentBucketName
-        S3Key: !Sub lambda/quake-net-event-grabber-${Version}-lambda.zip
+        S3Key: !Sub lambda/quake-net-initiator-${Version}-lambda.zip
       Handler: edu.colorado.cires.mgg.quakenet.lambda.initiator.InitiatorLambdaHandler::handleRequest
       Runtime: java11
       MemorySize: !Ref InitiatorLambdaMemorySize
       Timeout: !Ref InitiatorLambdaTimeout
       ReservedConcurrentExecutions: 1
-      Role: !GetAtt StatusLambdaRole.Arn
+      Role: !GetAtt InitiatorLambdaRole.Arn
       Environment:
         Variables:
-          STACK_NAME: !Ref AWS::StackName
+          DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
           DEFAULT_START_DATE: !Ref DefaultStartDate
+          CONNECTION_TIMEOUT_MS: !Ref HttpConnectionTimeoutMs
+          REQUEST_TIMEOUT_MS: !Ref HttpRequestTimeoutMs
+          TOPIC_ARN: !Ref InitiatorCompleteTopicArn
+
+
 
   CronEventRule:
     Type: AWS::Events::Rule

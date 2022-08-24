@@ -4,19 +4,150 @@ Description: QuakeNet Buckets
 Parameters:
   StackPrefix:
     Type: String
+  EnvironmentType:
+    Type: String
+  RolePermissionsBoundary:
+    Type: String
+  DeploymentBucketName:
+    Type: String
+  Version:
+    Type: String
+
+Conditions:
+  IsProduction:
+    !Equals [!Ref EnvironmentType, prod]
+  IsDev:
+    !Equals [!Ref EnvironmentType, dev]
+  HasPermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - ""
+          - !Ref RolePermissionsBoundary
 
 Mappings:
   BucketNameMap:
     QuakeNetSourceBucket:
-      Value: quake-net-source
+      Value: quake-net
 
-#TODO update deletion policy and drain
+
 Resources:
-  QuakeNetSourceBucket:
+
+  BucketDrainLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary:
+        Fn::If:
+          - HasPermissionsBoundary
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+          - AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Logging
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+        - PolicyName: S3Bucket
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                Resource:
+                  - Fn::Sub:
+                      - arn:${AWS::Partition}:s3:::${StackPrefix}-${AWS::AccountId}-${Suffix}/*
+                      - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - Fn::Sub:
+                      - arn:${AWS::Partition}:s3:::${StackPrefix}-${AWS::AccountId}-${Suffix}
+                      - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
+
+
+  BucketDrainLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Empty Bucket
+      Code:
+        S3Bucket: !Ref DeploymentBucketName
+        S3Key: !Sub lambda/quake-net-custom-resource-${Version}-lambda.zip
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.cf.EmptyBucketLambda::handleRequest
+      Runtime: java11
+      MemorySize: 512
+      Timeout: 90
+      Role: !GetAtt BucketDrainLambdaRole.Arn
+
+
+############################### QuakeNetSourceBucket ########################
+
+  QuakeNetSourceBucketProd: &QuakeNetSourceBucketProd
     Type: AWS::S3::Bucket
-    DeletionPolicy: Delete
+    Condition: IsProduction
+    DeletionPolicy: Retain
     Properties:
       BucketName:
         Fn::Sub:
           - ${StackPrefix}-${AWS::AccountId}-${Suffix}
-          - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
+          - Suffix: !FindInMap [BucketNameMap, QuakeNetSourceBucket, Value]
+
+  QuakeNetSourceBucketDev:
+    <<: *QuakeNetSourceBucketProd
+    Condition: IsDev
+    DeletionPolicy: Delete
+
+  QuakeNetSourceBucketDrain:
+    Type: Custom::QuakeNetSourceBucketDrain
+    Condition: IsDev
+    Properties:
+      ServiceToken: !GetAtt BucketDrainLambda.Arn
+      bucketName: !Ref QuakeNetSourceBucketDev
+
+  QuakeNetSourceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !If [ IsProduction, !Ref QuakeNetSourceBucketProd, !Ref QuakeNetSourceBucketDev ]
+      PolicyDocument:
+        Statement:
+          - Sid: AllowPublicRead,
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action: s3:GetObject
+            Resource:
+              - Fn::Sub:
+                  - arn:${AWS::Partition}:s3:::${StackPrefix}-${AWS::AccountId}-${Suffix}/*
+                  - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
+          - Sid: AllowPublicList,
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action: s3:ListBucket
+            Resource:
+              - Fn::Sub:
+                  - arn:${AWS::Partition}:s3:::${StackPrefix}-${AWS::AccountId}-${Suffix}
+                  - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
+
+#######################################################
+
+
+Outputs:
+  QuakeNetSourceBucketArn:
+    Value: !If [ IsProduction, !GetAtt QuakeNetSourceBucketProd.Arn, !GetAtt QuakeNetSourceBucketDev.Arn ]
+  QuakeNetSourceBucketName:
+    Value: !If [ IsProduction, !Ref QuakeNetSourceBucketProd, !Ref QuakeNetSourceBucketDev ]

@@ -14,58 +14,126 @@ Parameters:
     Type: Number
     MinValue: 0
     Default: 30
+  InitiatorLambdaMemorySize:
+    Description: The amount of memory for the initiator lambda
+    Type: Number
+    MinValue: 256
+    Default: 512
+  InitiatorLambdaTimeout:
+    Description: The timeout in seconds for the initiator lambda
+    Type: Number
+    MinValue: 10
+    MaxValue: 900
+    Default: 120
+  InitiatorCronExpression:
+    Description: The EventBridge Schedule Expression to check for new event data
+    Type: String
+    Default: 'cron(0 1 * * ? *)'
+  DefaultStartDate:
+    Description: The earliest date to check for events when initializing the earthquake data set
+    Default: '1660-01-01'
+    Type: String
+  HttpRequestTimeoutMs:
+    Description: The request timeout in milliseconds for HTTP requests
+    Type: Number
+    Default: 300000
+  HttpConnectionTimeoutMs:
+    Description: The connection timeout in milliseconds for HTTP requests
+    Type: Number
+    Default: 30000
+  QueueMessageVisibilityTimeoutSeconds:
+    Description: The timeout in seconds to keep in-flight messages hidden
+    Type: Number
+    Default: 300
+  QueueMessageMaxReceiveCount:
+    Description: The number of times a message can be received in a queue before sending to the DLQ
+    Type: Number
+    Default: 5
   EventGrabberLambdaMemorySize:
     Description: The amount of memory for the event grabber lambda
     Type: Number
     MinValue: 256
     Default: 512
+  EventGrabberLambdaConcurrency:
+    Description: The maximum number of instances to create when processing queues
+    Type: Number
+    MinValue: 1
+    Default: 10
   EventGrabberLambdaTimeout:
     Description: The timeout in seconds for the event grabber lambda
     Type: Number
     MinValue: 10
     MaxValue: 900
     Default: 480
-  EventGrabberCronExpression:
-    Description: The EventBridge Schedule Expression to check for new event data
-    Type: String
-    Default: 'cron(0 1 * * ? *)'
-
-
+  EventGrabberLambdaPageSize:
+    Description: The number of quake events to query at a time
+    Type: Number
+    Default: 200
 
 
 
 Resources:
 
-#  BucketStack:
-#    Type: AWS::CloudFormation::Stack
-#    Properties:
-#      Parameters:
-#        StagingBucketName: !Ref StagingBucketName
-#        OutputBucketName: !Ref OutputBucketName
-#        ApprovedBucketName: !Ref ApprovedBucketName
-#        EnvironmentType:
-#          Fn::ImportValue: !Sub ${StackPrefix}-trackline-environment-type
-#        StackPrefix: !Ref StackPrefix
-#      TemplateURL:
-#        Fn::Sub:
-#          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/bucket-stack.yaml
-#          - DeploymentBucketName:
-#              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
-#
-#
-#
-#  TopicStack:
-#    Type: AWS::CloudFormation::Stack
-#    Properties:
-#      Parameters:
-#        EmailSubscription: !Ref EmailSubscription
-#      TemplateURL:
-#        Fn::Sub:
-#          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/topic-stack.yaml
-#          - DeploymentBucketName:
-#              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
+  BucketStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        StackPrefix: !Ref StackPrefix
+        EnvironmentType:
+          Fn::ImportValue: !Sub ${StackPrefix}-trackline-environment-type
+        RolePermissionsBoundary: !Ref RolePermissionsBoundary
+        DeploymentBucketName:
+          Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+        Version: @project.version@@dashTimestamp@
+      TemplateURL:
+        Fn::Sub:
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/bucket-stack.yaml
+          - DeploymentBucketName:
+              Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
 
-  CronStack:
+
+  MessagingStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        StackPrefix: !Ref StackPrefix
+        VisibilityTimeoutSeconds: !Ref QueueMessageVisibilityTimeoutSeconds
+        MessageMaxReceiveCount: !Ref QueueMessageMaxReceiveCount
+      TemplateURL:
+        Fn::Sub:
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/messaging-stack.yaml
+          - DeploymentBucketName:
+              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
+
+  InitiatorStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DeploymentBucketName:
+          Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+        RolePermissionsBoundary: !Ref RolePermissionsBoundary
+        InitiatorLambdaMemorySize: !Ref InitiatorLambdaMemorySize
+        InitiatorLambdaTimeout: !Ref InitiatorLambdaTimeout
+        InitiatorCronExpression: !Ref InitiatorCronExpression
+        DefaultStartDate: !Ref DefaultStartDate
+        InitiatorCompleteTopicArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.InitiatorCompleteTopicArn
+        QuakeNetSourceBucketName:
+          Fn::GetAtt:
+            - BucketStack
+            - Outputs.QuakeNetSourceBucketName
+        HttpRequestTimeoutMs: !Ref HttpRequestTimeoutMs
+        HttpConnectionTimeoutMs: !Ref HttpConnectionTimeoutMs
+        Version: @project.version@@dashTimestamp@
+      TemplateURL:
+        Fn::Sub:
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/initiator-stack.yaml
+          - DeploymentBucketName:
+              Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+
+  EventGrabberStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
@@ -74,13 +142,27 @@ Resources:
         RolePermissionsBoundary: !Ref RolePermissionsBoundary
         EventGrabberLambdaMemorySize: !Ref EventGrabberLambdaMemorySize
         EventGrabberLambdaTimeout: !Ref EventGrabberLambdaTimeout
-        EventGrabberCronExpression: !Ref EventGrabberCronExpression
-        LogRetentionInDays: !Ref LogRetentionInDays
+        EventGrabberLambdaConcurrency: !Ref EventGrabberLambdaConcurrency
+        UsgsDateQueryCompleteTopicArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.UsgsDateQueryCompleteTopicArn
+        UsgsDateQueryQueueArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.UsgsDateQueryQueueArn
+        QuakeNetSourceBucketName:
+          Fn::GetAtt:
+            - BucketStack
+            - Outputs.QuakeNetSourceBucketName
+        HttpRequestTimeoutMs: !Ref HttpRequestTimeoutMs
+        HttpConnectionTimeoutMs: !Ref HttpConnectionTimeoutMs
         Version: @project.version@@dashTimestamp@
+        EventGrabberLambdaPageSize: !Ref EventGrabberLambdaPageSize
       TemplateURL:
         Fn::Sub:
-          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/cron-stack.yaml
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-grabber-stack.yaml
           - DeploymentBucketName:
-              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
+              Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
 
 

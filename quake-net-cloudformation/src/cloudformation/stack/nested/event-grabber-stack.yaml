@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: QuakeNet event grabbing stack
+
+Parameters:
+  DeploymentBucketName:
+    Description: The deployment bucket
+    Type: String
+  RolePermissionsBoundary:
+    Description: An optional permissions boundary to associate with roles
+    Type: String
+  EventGrabberLambdaMemorySize:
+    Description: The amount of memory for the event grabber lambda
+    Type: Number
+  EventGrabberLambdaTimeout:
+    Description: The timeout in seconds for the event grabber lambda
+    Type: Number
+  EventGrabberLambdaConcurrency:
+    Description: The maximum number of instances to create when processing queues
+    Type: Number
+    MinValue: 1
+  UsgsDateQueryCompleteTopicArn:
+    Type: String
+  UsgsDateQueryQueueArn:
+    Type: String
+  QuakeNetSourceBucketName:
+    Type: String
+  HttpRequestTimeoutMs:
+    Description: The request timeout in milliseconds for HTTP requests
+    Type: Number
+  HttpConnectionTimeoutMs:
+    Description: The connection timeout in milliseconds for HTTP requests
+    Type: Number
+  Version:
+    Description: The build version
+    Type: String
+  EventGrabberLambdaPageSize:
+    Description: The number of quake events to query at a time
+    Type: Number
+
+
+Conditions:
+  HasRolePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - ""
+          - !Ref RolePermissionsBoundary
+
+Resources:
+  EventGrabberLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary:
+        Fn::If:
+          - HasRolePermissionsBoundary
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+          - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Logging
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+        - PolicyName: SQS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Ref UsgsDateQueryQueueArn
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ChangeMessageVisibility
+        - PolicyName: SNS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Ref UsgsDateQueryCompleteTopicArn
+                Action:
+                  - sns:Publish
+
+
+
+  EventGrabberLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Queries USGS for earthquake event IDs by date
+      Code:
+        S3Bucket: !Ref DeploymentBucketName
+        S3Key: !Sub lambda/quake-net-event-grabber-${Version}-lambda.zip
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.eventgrabber.EventDetailsGrabberLambda::handleRequest
+      Runtime: java11
+      MemorySize: !Ref EventGrabberLambdaMemorySize
+      Timeout: !Ref EventGrabberLambdaTimeout
+      ReservedConcurrentExecutions: !Ref EventGrabberLambdaConcurrency
+      Role: !GetAtt EventGrabberLambdaRole.Arn
+      Environment:
+        Variables:
+          CONNECTION_TIMEOUT_MS: !Ref HttpConnectionTimeoutMs
+          REQUEST_TIMEOUT_MS: !Ref HttpRequestTimeoutMs
+          TOPIC_ARN: !Ref UsgsDateQueryCompleteTopicArn
+          PAGE_SIZE: !Ref EventGrabberLambdaPageSize
+
+
+
+  EventGrabberLambdaQueueTrigger:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      Enabled: true
+      EventSourceArn: !Ref UsgsDateQueryQueueArn
+      FunctionName: !GetAtt EventGrabberLambda.Arn
