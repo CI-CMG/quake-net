@@ -1,0 +1,6 @@
+[
+  {
+    "ParameterKey": "StackPrefix",
+    "ParameterValue": "@user.name@-dev-quake-net"
+  }
+]

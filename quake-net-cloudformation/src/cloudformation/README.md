@@ -123,7 +123,7 @@ aws cloudformation create-stack \
   --profile mggdev \
   --stack-name STACK_NAME \
   --template-url https://s3.amazonaws.com/BUCKET_NAME/stack/quake-net-stack.yaml \
-  --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND
+  --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
   --parameters file://quake-net-parameters.json
 ```
 
@@ -136,6 +136,6 @@ Run the following to updated the stack, use the deploy STACK_NAME and replace BU
 aws cloudformation update-stack \ 
   --profile mggdev \
   --stack-name STACK_NAME \
-  --template-url https://s3.amazonaws.com/BUCKET_NAME/stack/quake-net-stack.yaml\
+  --template-url https://s3.amazonaws.com/BUCKET_NAME/stack/quake-net-stack.yaml \
   --parameters file://quake-net-parameters.json
 ```

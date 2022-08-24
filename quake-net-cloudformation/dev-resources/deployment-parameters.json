@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "StackPrefix",
+    "ParameterValue": "@user.name@-dev-quake-net"
+  },
+  {
+    "ParameterKey": "DeploymentBucketName",
+    "ParameterValue": "@user.name@-dev-quake-net-deploy"
+  },
+  {
+    "ParameterKey": "EnvironmentType",
+    "ParameterValue": "dev"
+  }
+]

@@ -68,3 +68,4 @@ Temporary Items
 /.idea
 quake-net-cloudformation/quake-net-parameters.json
 quake-net-cloudformation/deployment-parameters.json
+quake-net-cloudformation/stack-properties.json

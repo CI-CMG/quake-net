@@ -96,7 +96,7 @@ Resources:
 
 ############################### QuakeNetSourceBucket ########################
 
-  QuakeNetSourceBucketProd: &QuakeNetSourceBucketProd
+  QuakeNetSourceBucketProd:
     Type: AWS::S3::Bucket
     Condition: IsProduction
     DeletionPolicy: Retain
@@ -107,9 +107,14 @@ Resources:
           - Suffix: !FindInMap [BucketNameMap, QuakeNetSourceBucket, Value]
 
   QuakeNetSourceBucketDev:
-    <<: *QuakeNetSourceBucketProd
+    Type: AWS::S3::Bucket
     Condition: IsDev
     DeletionPolicy: Delete
+    Properties:
+      BucketName:
+        Fn::Sub:
+          - ${StackPrefix}-${AWS::AccountId}-${Suffix}
+          - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
 
   QuakeNetSourceBucketDrain:
     Type: Custom::QuakeNetSourceBucketDrain
