@@ -4,7 +4,7 @@
     "ParameterValue": "@user.name@-dev-quake-net"
   },
   {
-    "ParameterKey": "LambdaRolePermissionsBoundary",
+    "ParameterKey": "RolePermissionsBoundary",
     "ParameterValue": "Customer_Admin_PermissionBoundary"
   }
 ]
