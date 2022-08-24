@@ -80,7 +80,7 @@ Resources:
       Parameters:
         StackPrefix: !Ref StackPrefix
         EnvironmentType:
-          Fn::ImportValue: !Sub ${StackPrefix}-trackline-environment-type
+          Fn::ImportValue: !Sub ${StackPrefix}-quake-net-environment-type
         RolePermissionsBoundary: !Ref RolePermissionsBoundary
         DeploymentBucketName:
           Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
@@ -103,7 +103,7 @@ Resources:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/messaging-stack.yaml
           - DeploymentBucketName:
-              Fn::ImportValue: !Sub ${StackPrefix}-trackline-deployment-bucket
+              Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
 
   InitiatorStack:
     Type: AWS::CloudFormation::Stack

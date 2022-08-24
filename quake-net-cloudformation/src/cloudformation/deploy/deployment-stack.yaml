@@ -8,6 +8,13 @@ Parameters:
   DeploymentBucketName:
     Description: The bucket used to deploy cloudformation resources
     Type: String
+  EnvironmentType:
+    Description: The deployment environment type
+    Type: String
+    Default: prod
+    AllowedValues:
+      - prod
+      - dev
 
 Resources:
   DeploymentBucket:
@@ -22,4 +29,9 @@ Outputs:
     Value: !Ref DeploymentBucketName
     Export:
       Name: !Sub ${StackPrefix}-quake-net-deployment-bucket
+  EnvironmentTypeOutput:
+    Description: The deployment environment type
+    Value: !Ref EnvironmentType
+    Export:
+      Name: !Sub ${StackPrefix}-quake-net-environment-type
 

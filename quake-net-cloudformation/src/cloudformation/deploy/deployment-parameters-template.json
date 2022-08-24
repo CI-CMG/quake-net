@@ -6,5 +6,9 @@
   {
     "ParameterKey": "DeploymentBucketName",
     "ParameterValue": "my-bucket-to-put-deploy-artifacts"
+  },
+  {
+    "ParameterKey": "EnvironmentType",
+    "ParameterValue": "prod"
   }
 ]
