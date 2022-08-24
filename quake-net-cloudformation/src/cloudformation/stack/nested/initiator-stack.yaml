@@ -81,6 +81,20 @@ Resources:
                 Resource: !Ref InitiatorCompleteTopicArn
                 Action:
                   - sns:Publish
+        - PolicyName: S3
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:s3:::${QuakeNetSourceBucketName}/*
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:s3:::${QuakeNetSourceBucketName}
+                Action:
+                  - s3:ListBucket
 
 
   InitiatorLambda:

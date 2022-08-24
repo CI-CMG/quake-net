@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -87,11 +88,12 @@ public class UsgsApiQueryier {
     }
   }
 
-  public static void query(EventGrabberProperties properties, Instant startTime, Instant endTime, Consumer<String> eventIdConsumer) {
+  public static void query(EventGrabberProperties properties, Instant startTime, Instant endTime, Consumer<List<String>> eventIdConsumer) {
     final int pageSize = properties.getPageSize();
 
     int resultCount = -1;
     int page = 0;
+    List<String> allEventIds = new ArrayList<>();
     while (resultCount != 0) {
 
       int offset = page * pageSize + 1;
@@ -128,10 +130,12 @@ public class UsgsApiQueryier {
       }
 
       resultCount = eventIds.size();
-      if (resultCount > 0) {
-        eventIds.forEach(eventIdConsumer::accept);
-      }
+      allEventIds.addAll(eventIds);
 
+    }
+
+    if (!allEventIds.isEmpty()) {
+      eventIdConsumer.accept(allEventIds);
     }
   }
 

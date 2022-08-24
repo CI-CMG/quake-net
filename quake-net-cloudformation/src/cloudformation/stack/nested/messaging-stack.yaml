@@ -23,6 +23,11 @@ Resources:
     Properties:
       TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-date-query
 
+  UsgsEventDetailsQueryCompleteTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-detail-query
+
   DeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -42,6 +47,15 @@ Resources:
     Properties:
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-details-query
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: !Ref MessageMaxReceiveCount
+
+  ReportInitiatorQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: !Ref VisibilityTimeoutSeconds
+      QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-report-initiatior
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
@@ -86,12 +100,34 @@ Resources:
               ArnEquals:
                 aws:SourceArn: !Ref InitiatorCompleteTopic
 
+  UsgsEventDetailsQueryCompleteTopicToReportInitiatorQueue:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ReportInitiatorQueue
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublishToTopic
+            Resource: !GetAtt ReportInitiatorQueue.Arn
+            Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref UsgsEventDetailsQueryCompleteTopic
+
 
 Outputs:
   InitiatorCompleteTopicArn:
     Value: !Ref InitiatorCompleteTopic
   UsgsDateQueryCompleteTopicArn:
     Value: !Ref UsgsDateQueryCompleteTopic
+  UsgsEventDetailsQueryCompleteTopicArn:
+    Value: !Ref UsgsEventDetailsQueryCompleteTopic
   UsgsDateQueryQueueUrl:
     Value: !Ref UsgsDateQueryQueue
   UsgsDateQueryQueueArn:
@@ -100,3 +136,7 @@ Outputs:
     Value: !Ref UsgsEventDetailsQueryQueue
   UsgsEventDetailsQueryQueueArn:
     Value: !GetAtt UsgsEventDetailsQueryQueue.Arn
+  ReportInitiatorQueueUrl:
+    Value: !Ref ReportInitiatorQueue
+  ReportInitiatorQueueArn:
+    Value: !GetAtt ReportInitiatorQueue.Arn

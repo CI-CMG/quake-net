@@ -7,6 +7,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse.BatchItemFa
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
+import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.util.ArrayList;
@@ -24,10 +26,13 @@ public class EventGrabberLambda implements RequestHandler<SQSEvent, SQSBatchResp
   private static final long requestTimeoutMs = Long.parseLong(System.getenv("REQUEST_TIMEOUT_MS"));
   private static final int pageSize = Integer.parseInt(System.getenv("PAGE_SIZE"));
   private static final String topicArn = System.getenv("TOPIC_ARN");
+  private static final String downloadBucket = System.getenv("DOWNLOAD_BUCKET");
   private static final SnsClient snsClient = SnsClient.builder().build();
   private static final ObjectMapper objectMapper = ObjectMapperCreator.create();
+  private static final S3Client s3Client = S3Client.builder().build();
+  private static final S3ClientMultipartUpload s3 = AwsS3ClientMultipartUpload.builder().s3(s3Client).build();
   private static final EventGrabberProperties properties;
-  private static final EventDetailsGrabber eventDetailsGrabber;
+  private static final EventDateGrabber eventDetailsGrabber;
 
   static {
     properties = new EventGrabberProperties();
@@ -35,7 +40,8 @@ public class EventGrabberLambda implements RequestHandler<SQSEvent, SQSBatchResp
     properties.setRequestTimeoutMs(requestTimeoutMs);
     properties.setPageSize(pageSize);
     properties.setTopicArn(topicArn);
-    eventDetailsGrabber = new EventDetailsGrabber(snsClient, objectMapper, properties);
+    properties.setBucketName(downloadBucket);
+    eventDetailsGrabber = new EventDateGrabber(s3Client, s3, snsClient, objectMapper, properties);
   }
 
   @Override

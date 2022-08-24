@@ -6,7 +6,7 @@ import edu.colorado.cires.cmg.s3out.MultipartUploadRequest;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.cmg.s3out.S3OutputStream;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
-import edu.colorado.cires.mgg.quakenet.model.InfoFile;
+import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,8 +81,7 @@ public class QueryRangeIterator {
 
     String json;
     try {
-      InfoFile infoFile = new InfoFile();
-      infoFile.setDate(date);
+      InfoFile infoFile = InfoFile.Builder.builder().withDate(date).build();
       json = objectMapper.writeValueAsString(infoFile);
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Unable to serialize message", e);

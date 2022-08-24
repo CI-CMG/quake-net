@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: QuakeNet event grabbing stack
+Description: QuakeNet event detail grabbing stack
 
 Parameters:
   DeploymentBucketName:
@@ -8,19 +8,19 @@ Parameters:
   RolePermissionsBoundary:
     Description: An optional permissions boundary to associate with roles
     Type: String
-  EventGrabberLambdaMemorySize:
-    Description: The amount of memory for the event grabber lambda
+  EventDetailsGrabberLambdaMemorySize:
+    Description: The amount of memory for the event detail grabber lambda
     Type: Number
-  EventGrabberLambdaTimeout:
-    Description: The timeout in seconds for the event grabber lambda
+  EventDetailsGrabberLambdaTimeout:
+    Description: The timeout in seconds for the event detail grabber lambda
     Type: Number
-  EventGrabberLambdaConcurrency:
+  EventDetailsGrabberLambdaConcurrency:
     Description: The maximum number of instances to create when processing queues
     Type: Number
     MinValue: 1
-  UsgsDateQueryCompleteTopicArn:
+  UsgsEventDetailsQueryCompleteTopicArn:
     Type: String
-  UsgsDateQueryQueueArn:
+  UsgsEventDetailsQueryQueueArn:
     Type: String
   QuakeNetSourceBucketName:
     Type: String
@@ -33,9 +33,6 @@ Parameters:
   Version:
     Description: The build version
     Type: String
-  EventGrabberLambdaPageSize:
-    Description: The number of quake events to query at a time
-    Type: Number
 
 
 Conditions:
@@ -46,7 +43,7 @@ Conditions:
           - !Ref RolePermissionsBoundary
 
 Resources:
-  EventGrabberLambdaRole:
+  EventDetailsGrabberLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary:
@@ -79,7 +76,7 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Resource: !Ref UsgsDateQueryQueueArn
+                Resource: !Ref UsgsEventDetailsQueryQueueArn
                 Action:
                   - sqs:ReceiveMessage
                   - sqs:DeleteMessage
@@ -90,7 +87,7 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Resource: !Ref UsgsDateQueryCompleteTopicArn
+                Resource: !Ref UsgsEventDetailsQueryCompleteTopicArn
                 Action:
                   - sns:Publish
         - PolicyName: S3
@@ -110,33 +107,32 @@ Resources:
 
 
 
-  EventGrabberLambda:
+  EventDetailsGrabberLambda:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Queries USGS for earthquake event IDs by date
+      Description: Queries USGS for earthquake event details by ID
       Code:
         S3Bucket: !Ref DeploymentBucketName
-        S3Key: !Sub lambda/quake-net-event-grabber-${Version}-lambda.zip
-      Handler: edu.colorado.cires.mgg.quakenet.lambda.eventgrabber.EventGrabberLambda::handleRequest
+        S3Key: !Sub lambda/quake-net-event-details-grabber-${Version}-lambda.zip
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.eventdetailsgrabber.EventDetailsGrabberLambda::handleRequest
       Runtime: java11
-      MemorySize: !Ref EventGrabberLambdaMemorySize
-      Timeout: !Ref EventGrabberLambdaTimeout
-      ReservedConcurrentExecutions: !Ref EventGrabberLambdaConcurrency
-      Role: !GetAtt EventGrabberLambdaRole.Arn
+      MemorySize: !Ref EventDetailsGrabberLambdaMemorySize
+      Timeout: !Ref EventDetailsGrabberLambdaTimeout
+      ReservedConcurrentExecutions: !Ref EventDetailsGrabberLambdaConcurrency
+      Role: !GetAtt EventDetailsGrabberLambdaRole.Arn
       Environment:
         Variables:
           CONNECTION_TIMEOUT_MS: !Ref HttpConnectionTimeoutMs
           REQUEST_TIMEOUT_MS: !Ref HttpRequestTimeoutMs
-          TOPIC_ARN: !Ref UsgsDateQueryCompleteTopicArn
-          PAGE_SIZE: !Ref EventGrabberLambdaPageSize
+          TOPIC_ARN: !Ref UsgsEventDetailsQueryCompleteTopicArn
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
 
 
 
-  EventGrabberLambdaQueueTrigger:
+  EventDetailsGrabberLambdaQueueTrigger:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       BatchSize: 1
       Enabled: true
-      EventSourceArn: !Ref UsgsDateQueryQueueArn
-      FunctionName: !GetAtt EventGrabberLambda.Arn
+      EventSourceArn: !Ref UsgsEventDetailsQueryQueueArn
+      FunctionName: !GetAtt EventDetailsGrabberLambda.Arn

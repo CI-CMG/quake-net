@@ -18,7 +18,7 @@ Parameters:
     Description: The amount of memory for the initiator lambda
     Type: Number
     MinValue: 256
-    Default: 512
+    Default: 1024
   InitiatorLambdaTimeout:
     Description: The timeout in seconds for the initiator lambda
     Type: Number
@@ -53,7 +53,7 @@ Parameters:
     Description: The amount of memory for the event grabber lambda
     Type: Number
     MinValue: 256
-    Default: 512
+    Default: 1024
   EventGrabberLambdaConcurrency:
     Description: The maximum number of instances to create when processing queues
     Type: Number
@@ -69,6 +69,22 @@ Parameters:
     Description: The number of quake events to query at a time
     Type: Number
     Default: 200
+  EventDetailsGrabberLambdaMemorySize:
+    Description: The amount of memory for the event details grabber lambda
+    Type: Number
+    MinValue: 256
+    Default: 1024
+  EventDetailsGrabberLambdaConcurrency:
+    Description: The maximum number of instances of the event details grabber lambda
+    Type: Number
+    MinValue: 1
+    Default: 10
+  EventDetailsGrabberLambdaTimeout:
+    Description: The timeout in seconds for the event details grabber lambda
+    Type: Number
+    MinValue: 10
+    MaxValue: 900
+    Default: 480
 
 
 
@@ -162,6 +178,37 @@ Resources:
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-grabber-stack.yaml
+          - DeploymentBucketName:
+              Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+
+  EventDetailsGrabberStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DeploymentBucketName:
+          Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+        RolePermissionsBoundary: !Ref RolePermissionsBoundary
+        EventDetailsGrabberLambdaMemorySize: !Ref EventDetailsGrabberLambdaMemorySize
+        EventDetailsGrabberLambdaTimeout: !Ref EventDetailsGrabberLambdaTimeout
+        EventDetailsGrabberLambdaConcurrency: !Ref EventDetailsGrabberLambdaConcurrency
+        UsgsEventDetailsQueryCompleteTopicArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.UsgsEventDetailsQueryCompleteTopicArn
+        UsgsEventDetailsQueryQueueArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.UsgsEventDetailsQueryQueueArn
+        QuakeNetSourceBucketName:
+          Fn::GetAtt:
+            - BucketStack
+            - Outputs.QuakeNetSourceBucketName
+        HttpRequestTimeoutMs: !Ref HttpRequestTimeoutMs
+        HttpConnectionTimeoutMs: !Ref HttpConnectionTimeoutMs
+        Version: @project.version@@dashTimestamp@
+      TemplateURL:
+        Fn::Sub:
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-details-grabber-stack.yaml
           - DeploymentBucketName:
               Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
 
