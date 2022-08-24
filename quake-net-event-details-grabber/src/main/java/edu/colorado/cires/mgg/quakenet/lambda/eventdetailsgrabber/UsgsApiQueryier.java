@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.zip.GZIPOutputStream;
@@ -85,7 +86,7 @@ public class UsgsApiQueryier {
       EventDetailGrabberMessage message,
       S3ClientMultipartUpload s3,
       Supplier<String> uriSupplier,
-      Function<String, String> fileNameSupplier
+      BiFunction<String, String, String> fileNameSupplier
   ) {
 
     String uri = uriSupplier.get();
@@ -98,12 +99,13 @@ public class UsgsApiQueryier {
         int responseCode = response.getCode();
         String content = readContent(response);
         if (responseCode == 200) {
-          // downloads/2012/05/2012-05-10/usgs-info-2012-05-10.json.gz
+          // downloads/2012/05/2012-05-10/<eventId>/<name>-2012-05-10-<eventId>.json.gz
           String date = message.getDate();
+          String eventId = message.getEventId();
           String[] parts = date.split("-");
           String year = parts[0];
           String month = parts[1];
-          String key = "downloads/" + year + "/" + month + "/" + date + "/" + fileNameSupplier.apply(date);
+          String key = "downloads/" + year + "/" + month + "/" + date + "/" + eventId + "/" + fileNameSupplier.apply(date, eventId);
 
           try (
               InputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
@@ -142,7 +144,7 @@ public class UsgsApiQueryier {
         message,
         s3,
         () -> buildUri(message.getEventId(), "quakeml"),
-        date -> "event-details-" + date + ".xml.gz");
+        (date, eventId) -> "event-details-" + date + "-" + eventId + ".xml.gz");
   }
 
   public static String queryDetailsJson(EventDetailsGrabberProperties properties, EventDetailGrabberMessage message, S3ClientMultipartUpload s3) {
@@ -151,7 +153,7 @@ public class UsgsApiQueryier {
         message,
         s3,
         () -> buildUri(message.getEventId(), "geojson"),
-        date -> "event-details-" + date + ".json.gz");
+        (date, eventId) -> "event-details-" + date + "-" + eventId + ".json.gz");
   }
 
   public static Optional<String> parseCdiUri(String content, ObjectMapper objectMapper) {
@@ -176,7 +178,7 @@ public class UsgsApiQueryier {
         message,
         s3,
         () -> uri,
-        date -> "event-cdi-" + date + ".xml.gz");
+        (date, eventId) -> "event-cdi-" + date + "-" + eventId + ".xml.gz");
   }
 
 

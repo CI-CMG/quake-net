@@ -26,6 +26,34 @@
       <classifier>lambda</classifier>
       <type>zip</type>
     </dependency>
+    <dependency>
+      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
+      <artifactId>quake-net-event-grabber</artifactId>
+      <version>${project.version}</version>
+      <classifier>lambda</classifier>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
+      <artifactId>quake-net-event-details-grabber</artifactId>
+      <version>${project.version}</version>
+      <classifier>lambda</classifier>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
+      <artifactId>quake-net-report-initializer</artifactId>
+      <version>${project.version}</version>
+      <classifier>lambda</classifier>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
+      <artifactId>quake-net-pdf-generator</artifactId>
+      <version>${project.version}</version>
+      <classifier>lambda</classifier>
+      <type>zip</type>
+    </dependency>
   </dependencies>
 
   <build>

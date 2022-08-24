@@ -17,6 +17,7 @@ public class QueryRangeDeterminer {
   }
 
   // downloads/2012/05/2012-05-10/usgs-info-2012-05-10.json.gz
+  // downloads/2012/05/2012-05-10/<eventId>/event-details-2012-05-10-<eventId>.json.gz
   public QueryRange getQueryRange() {
     ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
         .bucket(initiatorProperties.getDownloadBucket())
@@ -30,12 +31,14 @@ public class QueryRangeDeterminer {
       listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
       for (S3Object s3Object : listObjectsResponse.contents()) {
         String[] parts = s3Object.key().split("/");
-        String date = parts[3];
-        String file = parts[4];
-        if(file.equals("usgs-info-" + date + ".json.gz")) {
-          LocalDate localDate = LocalDate.parse(date);
-          if (localDate.isAfter(maxDate)) {
-            maxDate = localDate;
+        if (parts.length == 5) {
+          String date = parts[3];
+          String file = parts[4];
+          if(file.equals("usgs-info-" + date + ".json.gz")) {
+            LocalDate localDate = LocalDate.parse(date);
+            if (localDate.isAfter(maxDate)) {
+              maxDate = localDate;
+            }
           }
         }
       }

@@ -5,6 +5,7 @@ public class EventGrabberProperties {
   private int pageSize;
   private long connectionTimeoutMs;
   private long requestTimeoutMs;
+  private String topicArn;
 
   public int getPageSize() {
     return pageSize;
@@ -28,5 +29,13 @@ public class EventGrabberProperties {
 
   public void setRequestTimeoutMs(long requestTimeoutMs) {
     this.requestTimeoutMs = requestTimeoutMs;
+  }
+
+  public String getTopicArn() {
+    return topicArn;
+  }
+
+  public void setTopicArn(String topicArn) {
+    this.topicArn = topicArn;
   }
 }

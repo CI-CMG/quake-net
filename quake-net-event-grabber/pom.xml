@@ -43,10 +43,10 @@
       <artifactId>aws-lambda-java-log4j2</artifactId>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-lambda-java-events</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>

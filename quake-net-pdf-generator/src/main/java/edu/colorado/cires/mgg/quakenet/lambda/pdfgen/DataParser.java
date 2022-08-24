@@ -42,7 +42,10 @@ import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class DataParser {
 
@@ -54,16 +57,45 @@ public class DataParser {
     this.s3Client = s3Client;
   }
 
-  public static List<KeySet> getRequiredKeys(String yearStr, String monthStr) {
+  public List<KeySet> getRequiredKeys(List<String> keyPrefixes) {
     List<KeySet> results = new ArrayList<>(31);
+
+    for (String keyPrefix : keyPrefixes) {
+      ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+          .bucket(properties.getBucketName())
+          .prefix(keyPrefix)
+          .build();
+
+      ListObjectsV2Response listObjectsResponse;
+      do {
+        listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+        for (S3Object s3Object : listObjectsResponse.contents()) {
+          String[] parts = s3Object.key().split("/");
+          if(parts.length == 6) {
+            String year = parts[1];
+            String month = parts[2];
+            LocalDate date = LocalDate.parse(parts[3]);
+            String eventId = parts[4];
+            results.add(new KeySet(
+                "downloads/" + year + "/" + month + "/" + date + "/" + eventId + "/event-details-" + date + "-" + eventId + ".xml.gz",
+                "downloads/" + year + "/" + month + "/" + date + "/" + eventId + "/event-cdi-" + date + "-" + eventId + ".xml.gz"
+            ));
+          }
+        }
+      } while (listObjectsResponse.isTruncated());
+    }
+
+
+    return results;
+  }
+
+  public static List<String> getRequiredKeyPrefixes(String yearStr, String monthStr) {
+    List<String> results = new ArrayList<>(31);
     LocalDate date = LocalDate.parse(yearStr + "-" + monthStr + "-01");
     final Month targetMonth = date.getMonth();
     Month month;
     do {
-      results.add(new KeySet(
-          "downloads/" + yearStr + "/" + monthStr + "/" + date + "/event-details-" + date + ".xml.gz",
-          "downloads/" + yearStr + "/" + monthStr + "/" + date + "/event-cdi-" + date + ".xml.gz"
-      ));
+      results.add("downloads/" + yearStr + "/" + monthStr + "/" + date + "/");
       date = date.plusDays(1);
       month = date.getMonth();
     } while (month.equals(targetMonth));
