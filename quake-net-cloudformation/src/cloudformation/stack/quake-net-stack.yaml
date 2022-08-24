@@ -44,11 +44,11 @@ Parameters:
   QueueMessageVisibilityTimeoutSeconds:
     Description: The timeout in seconds to keep in-flight messages hidden
     Type: Number
-    Default: 300
+    Default: 900
   QueueMessageMaxReceiveCount:
     Description: The number of times a message can be received in a queue before sending to the DLQ
     Type: Number
-    Default: 5
+    Default: 3
   EventGrabberLambdaMemorySize:
     Description: The amount of memory for the event grabber lambda
     Type: Number
