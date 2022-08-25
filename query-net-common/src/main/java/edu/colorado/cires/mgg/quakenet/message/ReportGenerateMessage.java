@@ -2,22 +2,22 @@ package edu.colorado.cires.mgg.quakenet.message;
 
 public class ReportGenerateMessage {
 
-  private String year;
-  private String month;
+  private Integer year;
+  private Integer month;
 
-  public String getYear() {
+  public Integer getYear() {
     return year;
   }
 
-  public void setYear(String year) {
+  public void setYear(Integer year) {
     this.year = year;
   }
 
-  public String getMonth() {
+  public Integer getMonth() {
     return month;
   }
 
-  public void setMonth(String month) {
+  public void setMonth(Integer month) {
     this.month = month;
   }
 }

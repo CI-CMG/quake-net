@@ -85,6 +85,22 @@ Parameters:
     MinValue: 10
     MaxValue: 900
     Default: 480
+  ReportInitiatorLambdaMemorySize:
+    Description: The amount of memory for the report initiator lambda
+    Type: Number
+    MinValue: 256
+    Default: 1024
+  ReportInitiatorLambdaConcurrency:
+    Description: The maximum number of instances of the report initiatorlambda
+    Type: Number
+    MinValue: 1
+    Default: 10
+  ReportInitiatorLambdaTimeout:
+    Description: The timeout in seconds for the report initiator lambda
+    Type: Number
+    MinValue: 10
+    MaxValue: 900
+    Default: 480
 
 
 
@@ -209,6 +225,35 @@ Resources:
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-details-grabber-stack.yaml
+          - DeploymentBucketName:
+              Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+
+  ReportInitiatorStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DeploymentBucketName:
+          Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+        RolePermissionsBoundary: !Ref RolePermissionsBoundary
+        ReportInitiatorLambdaMemorySize: !Ref ReportInitiatorLambdaMemorySize
+        ReportInitiatorLambdaTimeout: !Ref ReportInitiatorLambdaTimeout
+        ReportInitiatorLambdaConcurrency: !Ref ReportInitiatorLambdaConcurrency
+        ReportInitiatorCompleteTopicArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.ReportInitiatorCompleteTopicArn
+        ReportInitiatorQueueArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.ReportInitiatorQueueArn
+        QuakeNetSourceBucketName:
+          Fn::GetAtt:
+            - BucketStack
+            - Outputs.QuakeNetSourceBucketName
+        Version: @project.version@@dashTimestamp@
+      TemplateURL:
+        Fn::Sub:
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/report-initiator-stack.yaml
           - DeploymentBucketName:
               Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
 

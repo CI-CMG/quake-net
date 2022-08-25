@@ -5,15 +5,14 @@ import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import gov.noaa.ncei.xmlns.cdidata.Location;
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
-import org.apache.commons.io.IOUtils;
 import org.quakeml.xmlns.bed._1.Comment;
 import org.quakeml.xmlns.bed._1.Event;
 import org.quakeml.xmlns.bed._1.EventDescription;
@@ -38,16 +36,19 @@ import org.quakeml.xmlns.bed._1.Origin;
 import org.quakeml.xmlns.bed._1.RealQuantity;
 import org.quakeml.xmlns.bed._1.TimeQuantity;
 import org.quakeml.xmlns.quakeml._1.Quakeml;
-import software.amazon.awssdk.core.ResponseInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class DataParser {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataParser.class);
 
   private final PdfGenProperties properties;
   private final S3Client s3Client;
@@ -57,13 +58,26 @@ public class DataParser {
     this.s3Client = s3Client;
   }
 
-  public List<KeySet> getRequiredKeys(List<String> keyPrefixes) {
-    List<KeySet> results = new ArrayList<>(31);
+  private boolean isReportExists(int year, int month) {
+    HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+        .bucket(properties.getBucketName())
+        .key(String.format("reports/%d/%02d/earthquake-info-%d-%02d.pdf", year, month, year, month))
+        .build();
+    try {
+      s3Client.headObject(headObjectRequest);
+    } catch (NoSuchKeyException e) {
+      return false;
+    }
+    return true;
+  }
 
-    for (String keyPrefix : keyPrefixes) {
+  public List<KeySet> getRequiredKeys(int year, int month) {
+    List<KeySet> results = new ArrayList<>();
+
+    if(!isReportExists(year, month)) {
       ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
           .bucket(properties.getBucketName())
-          .prefix(keyPrefix)
+          .prefix(String.format("downloads/%d/%02d/", year, month))
           .build();
 
       ListObjectsV2Response listObjectsResponse;
@@ -71,34 +85,28 @@ public class DataParser {
         listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
         for (S3Object s3Object : listObjectsResponse.contents()) {
           String[] parts = s3Object.key().split("/");
-          if(parts.length == 6) {
-            String year = parts[1];
-            String month = parts[2];
+          if (parts.length == 6) {
             LocalDate date = LocalDate.parse(parts[3]);
             String eventId = parts[4];
-            results.add(new KeySet(
-                "downloads/" + year + "/" + month + "/" + date + "/" + eventId + "/event-details-" + date + "-" + eventId + ".xml.gz",
-                "downloads/" + year + "/" + month + "/" + date + "/" + eventId + "/event-cdi-" + date + "-" + eventId + ".xml.gz"
-            ));
+            String file = parts[6];
+            if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))) {
+              results.add(new KeySet(
+                  s3Object.key(),
+                  s3Object.key().replace("/" + file, String.format("/event-cdi-%s-%s.xml.gz", date, eventId))
+              ));
+            }
+
           }
         }
       } while (listObjectsResponse.isTruncated());
+
+      Collections.sort(results);
+    } else {
+      LOGGER.info("Report already existed: {}-{}", year, month);
     }
 
 
-    return results;
-  }
 
-  public static List<String> getRequiredKeyPrefixes(String yearStr, String monthStr) {
-    List<String> results = new ArrayList<>(31);
-    LocalDate date = LocalDate.parse(yearStr + "-" + monthStr + "-01");
-    final Month targetMonth = date.getMonth();
-    Month month;
-    do {
-      results.add("downloads/" + yearStr + "/" + monthStr + "/" + date + "/");
-      date = date.plusDays(1);
-      month = date.getMonth();
-    } while (month.equals(targetMonth));
     return results;
   }
 
@@ -134,7 +142,7 @@ public class DataParser {
   }
 
   public static void enrichCdi(QnEvent event, Cdidata cdidata) {
-    if(cdidata.getCdi() != null && cdidata.getCdi().getLocations() != null) {
+    if (cdidata.getCdi() != null && cdidata.getCdi().getLocations() != null) {
       for (Location location : cdidata.getCdi().getLocations()) {
         QnCdi cdi = new QnCdi();
         cdi.setCdi(location.getCdi());
@@ -161,7 +169,6 @@ public class DataParser {
 
       // There should only be one from the detail API call
       Event event = getEvents(eventParameters).get(0);
-
 
       Optional<String> maybeEventId = getEventId(event);
       maybeEventId.ifPresent(qnEvent::setEventId);
@@ -206,9 +213,6 @@ public class DataParser {
       // 0..1
       Optional<Double> maybeDepthValue = maybeDepth.flatMap(DataParser::getRealQuantityValues);
       maybeDepthValue.ifPresent(qnEvent::setDepth);
-
-
-
 
       // 0..* description
       List<EventDescription> descriptions = getDescription(event);

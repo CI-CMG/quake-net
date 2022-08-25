@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: QuakeNet report initiating stack
+
+Parameters:
+  DeploymentBucketName:
+    Description: The deployment bucket
+    Type: String
+  RolePermissionsBoundary:
+    Description: An optional permissions boundary to associate with roles
+    Type: String
+  ReportInitiatorLambdaMemorySize:
+    Description: The amount of memory for the report initiator lambda
+    Type: Number
+  ReportInitiatorLambdaTimeout:
+    Description: The timeout in seconds for the report initiator lambda
+    Type: Number
+  ReportInitiatorLambdaConcurrency:
+    Description: The maximum number of instances to create when processing queues
+    Type: Number
+    MinValue: 1
+  ReportInitiatorCompleteTopicArn:
+    Type: String
+  ReportInitiatorQueueArn:
+    Type: String
+  QuakeNetSourceBucketName:
+    Type: String
+  Version:
+    Description: The build version
+    Type: String
+
+
+Conditions:
+  HasRolePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - ""
+          - !Ref RolePermissionsBoundary
+
+Resources:
+  ReportInitiatorLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary:
+        Fn::If:
+          - HasRolePermissionsBoundary
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+          - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Logging
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+        - PolicyName: SQS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Ref ReportInitiatorQueueArn
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ChangeMessageVisibility
+        - PolicyName: SNS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Ref ReportInitiatorCompleteTopicArn
+                Action:
+                  - sns:Publish
+        - PolicyName: S3
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:s3:::${QuakeNetSourceBucketName}/*
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:s3:::${QuakeNetSourceBucketName}
+                Action:
+                  - s3:ListBucket
+
+
+
+  ReportInitiatorLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Checks to see if all USGS data was retrieved for a given month to generate a report
+      Code:
+        S3Bucket: !Ref DeploymentBucketName
+        S3Key: !Sub lambda/quake-net-report-initiator-${Version}-lambda.zip
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.reportinit.ReportInitiatorLambda::handleRequest
+      Runtime: java11
+      MemorySize: !Ref ReportInitiatorLambdaMemorySize
+      Timeout: !Ref ReportInitiatorLambdaTimeout
+      ReservedConcurrentExecutions: !Ref ReportInitiatorLambdaConcurrency
+      Role: !GetAtt ReportInitiatorLambdaRole.Arn
+      Environment:
+        Variables:
+          TOPIC_ARN: !Ref ReportInitiatorCompleteTopicArn
+          DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
+
+
+
+  ReportInitiatorLambdaQueueTrigger:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      Enabled: true
+      EventSourceArn: !Ref ReportInitiatorQueueArn
+      FunctionName: !GetAtt ReportInitiatorLambda.Arn

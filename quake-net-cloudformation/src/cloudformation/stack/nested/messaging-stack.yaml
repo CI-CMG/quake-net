@@ -28,6 +28,11 @@ Resources:
     Properties:
       TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-detail-query
 
+  ReportInitiatorCompleteTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-report-initiator
+
   DeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -56,6 +61,15 @@ Resources:
     Properties:
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-report-initiatior
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: !Ref MessageMaxReceiveCount
+
+  ReportGenerationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: !Ref VisibilityTimeoutSeconds
+      QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-report-generation
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
@@ -120,6 +134,26 @@ Resources:
               ArnEquals:
                 aws:SourceArn: !Ref UsgsEventDetailsQueryCompleteTopic
 
+  ReportInitiatorCompleteTopicToReportGenerationQueue:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ReportInitiatorQueue
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublishToTopic
+            Resource: !GetAtt ReportGenerationQueue.Arn
+            Effect: Allow
+            Principal:
+              Service:
+                - sns.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref ReportInitiatorCompleteTopic
+
 
 Outputs:
   InitiatorCompleteTopicArn:
@@ -128,6 +162,8 @@ Outputs:
     Value: !Ref UsgsDateQueryCompleteTopic
   UsgsEventDetailsQueryCompleteTopicArn:
     Value: !Ref UsgsEventDetailsQueryCompleteTopic
+  ReportInitiatorCompleteTopicArn:
+    Value: !Ref ReportInitiatorCompleteTopic
   UsgsDateQueryQueueUrl:
     Value: !Ref UsgsDateQueryQueue
   UsgsDateQueryQueueArn:
@@ -140,3 +176,7 @@ Outputs:
     Value: !Ref ReportInitiatorQueue
   ReportInitiatorQueueArn:
     Value: !GetAtt ReportInitiatorQueue.Arn
+  ReportGenerationQueueUrl:
+    Value: !Ref ReportGenerationQueue
+  ReportGenerationQueueArn:
+    Value: !GetAtt ReportGenerationQueue.Arn

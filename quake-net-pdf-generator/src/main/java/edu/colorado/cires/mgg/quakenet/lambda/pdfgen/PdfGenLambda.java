@@ -51,8 +51,7 @@ public class PdfGenLambda implements RequestHandler<SQSEvent, SQSBatchResponse> 
         messageId = record.getMessageId();
 
         ReportGenerateMessage message = objectMapper.readValue(record.getBody(), ReportGenerateMessage.class);
-        List<String> prefixes = DataParser.getRequiredKeyPrefixes(message.getYear(), message.getMonth());
-        List<KeySet> keySets = dataParser.getRequiredKeys(prefixes);
+        List<KeySet> keySets = dataParser.getRequiredKeys(message.getYear(), message.getMonth());
         List<QnEvent> events = new ArrayList<>();
         for (KeySet keySet : keySets) {
           Quakeml quakeml = dataParser.readQuakeMl(keySet.getDetailsKey())
