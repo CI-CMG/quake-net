@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: QuakeNet Cron Trigger Resources
+Description: QuakeNet report generation stack
 
 Parameters:
   DeploymentBucketName:
@@ -8,30 +8,20 @@ Parameters:
   RolePermissionsBoundary:
     Description: An optional permissions boundary to associate with roles
     Type: String
-  InitiatorLambdaMemorySize:
-    Description: The amount of memory for the initiator lambda
+  ReportGenerationLambdaMemorySize:
+    Description: The amount of memory for the report initiator lambda
     Type: Number
-  InitiatorLambdaTimeout:
-    Description: The timeout in seconds for the initiator lambda
+  ReportGenerationLambdaTimeout:
+    Description: The timeout in seconds for the report initiator lambda
     Type: Number
-  InitiatorCronExpression:
-    Description: The EventBridge Schedule Expression to check for new event data
-    Default: 'cron(0 1 * * ? *)'
-    Type: String
-  DefaultStartDate:
-    Description: The earliest date to check for events when initializing the earthquake data set
-    Default: '1660-01-01'
-    Type: String
-  InitiatorCompleteTopicArn:
+  ReportGenerationLambdaConcurrency:
+    Description: The maximum number of instances to create when processing queues
+    Type: Number
+    MinValue: 1
+  ReportGenerationQueueArn:
     Type: String
   QuakeNetSourceBucketName:
     Type: String
-  HttpRequestTimeoutMs:
-    Description: The request timeout in milliseconds for HTTP requests
-    Type: Number
-  HttpConnectionTimeoutMs:
-    Description: The connection timeout in milliseconds for HTTP requests
-    Type: Number
   Version:
     Description: The build version
     Type: String
@@ -45,7 +35,7 @@ Conditions:
           - !Ref RolePermissionsBoundary
 
 Resources:
-  InitiatorLambdaRole:
+  ReportGenerationLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       PermissionsBoundary:
@@ -73,14 +63,17 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-        - PolicyName: SNS
+        - PolicyName: SQS
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Resource: !Ref InitiatorCompleteTopicArn
+                Resource: !Ref ReportGenerationQueueArn
                 Action:
-                  - sns:Publish
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ChangeMessageVisibility
         - PolicyName: S3
           PolicyDocument:
             Version: 2012-10-17
@@ -97,44 +90,30 @@ Resources:
                   - s3:ListBucket
 
 
-  InitiatorLambda:
+
+  ReportGenerationLambda:
     Type: AWS::Lambda::Function
     Properties:
-      Description: Determines dates to query for USGS earthquake events
+      Description: Generates a PDF report for a given month
       Code:
         S3Bucket: !Ref DeploymentBucketName
-        S3Key: !Sub lambda/quake-net-initiator-${Version}-lambda.zip
-      Handler: edu.colorado.cires.mgg.quakenet.lambda.initiator.InitiatorLambdaHandler::handleRequest
+        S3Key: !Sub lambda/quake-net-report-initiator-${Version}-lambda.zip
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.pdfgen.PdfGenLambda::handleRequest
       Runtime: java11
-      MemorySize: !Ref InitiatorLambdaMemorySize
-      Timeout: !Ref InitiatorLambdaTimeout
-      ReservedConcurrentExecutions: 1
-      Role: !GetAtt InitiatorLambdaRole.Arn
+      MemorySize: !Ref ReportGenerationLambdaMemorySize
+      Timeout: !Ref ReportGenerationLambdaTimeout
+      ReservedConcurrentExecutions: !Ref ReportGenerationLambdaConcurrency
+      Role: !GetAtt ReportGenerationLambdaRole.Arn
       Environment:
         Variables:
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
-          DEFAULT_START_DATE: !Ref DefaultStartDate
-          CONNECTION_TIMEOUT_MS: !Ref HttpConnectionTimeoutMs
-          REQUEST_TIMEOUT_MS: !Ref HttpRequestTimeoutMs
-          TOPIC_ARN: !Ref InitiatorCompleteTopicArn
 
 
 
-  CronEventRule:
-    Type: AWS::Events::Rule
+  ReportGenerationLambdaQueueTrigger:
+    Type: AWS::Lambda::EventSourceMapping
     Properties:
-      Description: Cron trigger to grab new quake events
-      ScheduleExpression: !Ref InitiatorCronExpression
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt InitiatorLambda.Arn
-          Id: EventGrabberCron
-
-
-  InitiatorLambdaCronPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt InitiatorLambda.Arn
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt CronEventRule.Arn
+      BatchSize: 1
+      Enabled: true
+      EventSourceArn: !Ref ReportGenerationQueueArn
+      FunctionName: !GetAtt ReportGenerationLambda.Arn

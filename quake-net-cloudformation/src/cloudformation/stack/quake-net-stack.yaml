@@ -101,6 +101,22 @@ Parameters:
     MinValue: 10
     MaxValue: 900
     Default: 480
+  ReportGenerationLambdaMemorySize:
+    Description: The amount of memory for the report initiator lambda
+    Type: Number
+    MinValue: 256
+    Default: 1024
+  ReportGenerationLambdaConcurrency:
+    Description: The maximum number of instances of the report initiatorlambda
+    Type: Number
+    MinValue: 1
+    Default: 10
+  ReportGenerationLambdaTimeout:
+    Description: The timeout in seconds for the report initiator lambda
+    Type: Number
+    MinValue: 10
+    MaxValue: 900
+    Default: 480
 
 
 
@@ -254,6 +270,31 @@ Resources:
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/report-initiator-stack.yaml
+          - DeploymentBucketName:
+              Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+
+  ReportGenerationStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DeploymentBucketName:
+          Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
+        RolePermissionsBoundary: !Ref RolePermissionsBoundary
+        ReportGenerationLambdaMemorySize: !Ref ReportGenerationLambdaMemorySize
+        ReportGenerationLambdaTimeout: !Ref ReportGenerationLambdaTimeout
+        ReportGenerationLambdaConcurrency: !Ref ReportGenerationLambdaConcurrency
+        ReportGenerationQueueArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.ReportGenerationQueueArn
+        QuakeNetSourceBucketName:
+          Fn::GetAtt:
+            - BucketStack
+            - Outputs.QuakeNetSourceBucketName
+        Version: @project.version@@dashTimestamp@
+      TemplateURL:
+        Fn::Sub:
+          - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/report-generation-stack.yaml
           - DeploymentBucketName:
               Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
 
