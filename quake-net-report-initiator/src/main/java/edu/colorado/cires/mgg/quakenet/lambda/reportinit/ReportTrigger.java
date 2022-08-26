@@ -34,19 +34,21 @@ public class ReportTrigger {
   private final S3Client s3;
   private final ObjectMapper objectMapper;
   private final SnsClient snsClient;
+  private final BucketIteratorFactory bucketIteratorFactory;
 
   public ReportTrigger(ReportInitiatorProperties properties, S3Client s3, ObjectMapper objectMapper,
-      SnsClient snsClient) {
+      SnsClient snsClient, BucketIteratorFactory bucketIteratorFactory) {
     this.properties = properties;
     this.s3 = s3;
     this.objectMapper = objectMapper;
     this.snsClient = snsClient;
+    this.bucketIteratorFactory = bucketIteratorFactory;
   }
 
   private boolean isReportExists(LocalDate date) {
     HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
         .bucket(properties.getBucketName())
-        .key(String.format("reports/%d/%02d/earthquake-info-%d-%02d.pdf", date.getYear(), date.getDayOfMonth(), date.getYear(), date.getDayOfMonth()))
+        .key(String.format("reports/%d/%02d/earthquake-info-%d-%02d.pdf", date.getYear(), date.getMonthValue(), date.getYear(), date.getMonthValue()))
         .build();
     try {
       s3.headObject(headObjectRequest);
@@ -79,36 +81,29 @@ public class ReportTrigger {
       Set<String> expectedEventIds = new HashSet<>();
       Set<String> actualEventIds = new HashSet<>();
 
-      ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
-          .bucket(properties.getBucketName())
-          .prefix(String.format("downloads/%d/%02d/", date.getYear(), date.getDayOfMonth()))
-          .build();
-
-      ListObjectsV2Response listObjectsResponse;
-      do {
-        listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
-        for (S3Object s3Object : listObjectsResponse.contents()) {
-          String key = s3Object.key();
-          String[] parts = key.split("/");
-          if (parts.length == 5) {
-            String dateStr = parts[3];
-            String file = parts[4];
-            if (file.equals(String.format("usgs-info-%s.json.gz", dateStr))) {
-              InfoFile infoFile = readInfo(key);
-              expectedEventIds.addAll(infoFile.getEventIds());
-            }
-          } else if (parts.length == 6) {
-            String eventId = parts[4];
-            String file = parts[5];
-            if (file.equals("event-details-" + date + "-" + eventId + ".xml.gz")) {
-              actualEventIds.add(eventId);
-            }
+      BucketIterator bucketIterator = bucketIteratorFactory.create(s3, properties.getBucketName(), String.format("downloads/%d/%02d/", date.getYear(), date.getMonthValue()));
+      while (bucketIterator.hasNext()) {
+        S3Object s3Object = bucketIterator.next();
+        String key = s3Object.key();
+        String[] parts = key.split("/");
+        if (parts.length == 5) {
+          String dateStr = parts[3];
+          String file = parts[4];
+          if (file.equals(String.format("usgs-info-%s.json.gz", dateStr))) {
+            InfoFile infoFile = readInfo(key);
+            expectedEventIds.addAll(infoFile.getEventIds());
+          }
+        } else if (parts.length == 6) {
+          String eventId = parts[4];
+          String file = parts[5];
+          if (file.equals("event-details-" + date + "-" + eventId + ".xml.gz")) {
+            actualEventIds.add(eventId);
           }
         }
-      } while (listObjectsResponse.isTruncated());
+      }
 
       if (expectedEventIds.equals(actualEventIds)) {
-        sendGenerateReportMessage(date.getYear(), date.getDayOfMonth());
+        sendGenerateReportMessage(date.getYear(), date.getMonthValue());
       }
     } else {
       LOGGER.info("Report already existed: {}", message.getDate());

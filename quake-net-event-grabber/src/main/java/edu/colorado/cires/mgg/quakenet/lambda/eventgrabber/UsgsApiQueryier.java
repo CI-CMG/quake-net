@@ -34,16 +34,19 @@ public class UsgsApiQueryier {
   private static String readContent(CloseableHttpResponse response) {
     try {
       HttpEntity entity = response.getEntity();
-      try {
-        try (InputStream in = entity.getContent()) {
-          return IOUtils.toString(in, StandardCharsets.UTF_8);
+      if(entity != null) {
+        try {
+          try (InputStream in = entity.getContent()) {
+            return IOUtils.toString(in, StandardCharsets.UTF_8);
+          }
+        } finally {
+          EntityUtils.consume(entity);
         }
-      } finally {
-        EntityUtils.consume(entity);
       }
     } catch (IOException e) {
       throw new IllegalStateException("Unable to read content", e);
     }
+    return "";
   }
 
   private static CloseableHttpClient createClient(EventGrabberProperties properties) {
@@ -55,12 +58,12 @@ public class UsgsApiQueryier {
 
   }
 
-  private static String buildUri(Instant startTime, Instant endTime, int pageSize, int offset) {
+  private static String buildUri(String baseUrl, Instant startTime, Instant endTime, int pageSize, int offset) {
     try {
-      return new URIBuilder("https://earthquake.usgs.gov/fdsnws/event/1/query")
+      return new URIBuilder(baseUrl + "/fdsnws/event/1/query")
           .addParameter("format", "quakeml")
           .addParameter("starttime", startTime.toString())
-          .addParameter("endtime", endTime.toString())
+          .addParameter("endtime", endTime.minusMillis(1).toString())
           .addParameter("includeallorigins", "false")
           .addParameter("includeallmagnitudes", "false")
           .addParameter("orderby", "time-asc")
@@ -98,7 +101,7 @@ public class UsgsApiQueryier {
 
       int offset = page * pageSize + 1;
       page++;
-      String uri = buildUri(startTime, endTime, pageSize, offset);
+      String uri = buildUri(properties.getBaseUrl(), startTime, endTime, pageSize, offset);
       LOGGER.info("Request: {}", uri);
 
       List<String> eventIds;
@@ -112,6 +115,10 @@ public class UsgsApiQueryier {
           if (responseCode == 200) {
             Quakeml quakeml = parseQuakeml(content);
             eventIds = DataParser.parseEventIds(quakeml);
+            if(eventIds.isEmpty()) {
+              LOGGER.info("No More Results: {} : {} : {}", uri);
+              break;
+            }
           } else if (responseCode == 204) {
             LOGGER.info("No More Results: {} : {} : {}", uri, responseCode, response.getReasonPhrase());
             break;

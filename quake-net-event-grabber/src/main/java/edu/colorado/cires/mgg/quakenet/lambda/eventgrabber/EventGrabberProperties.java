@@ -7,6 +7,7 @@ public class EventGrabberProperties {
   private long requestTimeoutMs;
   private String topicArn;
   private String bucketName;
+  private String baseUrl;
 
   public int getPageSize() {
     return pageSize;
@@ -46,5 +47,13 @@ public class EventGrabberProperties {
 
   public void setBucketName(String bucketName) {
     this.bucketName = bucketName;
+  }
+
+  public String getBaseUrl() {
+    return baseUrl;
+  }
+
+  public void setBaseUrl(String baseUrl) {
+    this.baseUrl = baseUrl;
   }
 }

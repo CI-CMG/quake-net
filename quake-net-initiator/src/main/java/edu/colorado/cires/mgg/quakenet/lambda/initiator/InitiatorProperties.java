@@ -4,8 +4,6 @@ public class InitiatorProperties {
 
   private String downloadBucket;
   private String defaultStartDate;
-  private long connectionTimeoutMs;
-  private long requestTimeoutMs;
   private String topicArn;
 
   public String getDownloadBucket() {
@@ -22,22 +20,6 @@ public class InitiatorProperties {
 
   public void setDefaultStartDate(String defaultStartDate) {
     this.defaultStartDate = defaultStartDate;
-  }
-
-  public long getConnectionTimeoutMs() {
-    return connectionTimeoutMs;
-  }
-
-  public void setConnectionTimeoutMs(long connectionTimeoutMs) {
-    this.connectionTimeoutMs = connectionTimeoutMs;
-  }
-
-  public long getRequestTimeoutMs() {
-    return requestTimeoutMs;
-  }
-
-  public void setRequestTimeoutMs(long requestTimeoutMs) {
-    this.requestTimeoutMs = requestTimeoutMs;
   }
 
   public String getTopicArn() {

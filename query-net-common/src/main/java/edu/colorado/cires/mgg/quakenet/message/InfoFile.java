@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonDeserialize(builder = InfoFile.Builder.class)
 public class InfoFile {
@@ -35,6 +36,33 @@ public class InfoFile {
   @JsonAnyGetter
   public Map<String, Object> getOtherFields() {
     return otherFields;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    InfoFile infoFile = (InfoFile) o;
+    return Objects.equals(date, infoFile.date) && Objects.equals(eventIds, infoFile.eventIds) && Objects.equals(
+        otherFields, infoFile.otherFields);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(date, eventIds, otherFields);
+  }
+
+  @Override
+  public String toString() {
+    return "InfoFile{" +
+        "date=" + date +
+        ", eventIds=" + eventIds +
+        ", otherFields=" + otherFields +
+        '}';
   }
 
   public static class Builder {

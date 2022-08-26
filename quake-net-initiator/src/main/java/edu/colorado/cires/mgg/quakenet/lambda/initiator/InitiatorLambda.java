@@ -22,8 +22,6 @@ public class InitiatorLambda implements RequestStreamHandler {
 
   private static final String downloadBucket = System.getenv("DOWNLOAD_BUCKET");
   private static final String defaultStartDate = System.getenv("DEFAULT_START_DATE");
-  private static final long connectionTimeoutMs = Long.parseLong(System.getenv("CONNECTION_TIMEOUT_MS"));
-  private static final long requestTimeoutMs = Long.parseLong(System.getenv("REQUEST_TIMEOUT_MS"));
   private static final String topicArn = System.getenv("TOPIC_ARN");
   private static final S3Client s3Client = S3Client.builder().build();
   private static final SnsClient snsClient = SnsClient.builder().build();
@@ -36,8 +34,6 @@ public class InitiatorLambda implements RequestStreamHandler {
     properties = new InitiatorProperties();
     properties.setDownloadBucket(downloadBucket);
     properties.setDefaultStartDate(defaultStartDate);
-    properties.setConnectionTimeoutMs(connectionTimeoutMs);
-    properties.setRequestTimeoutMs(requestTimeoutMs);
     properties.setTopicArn(topicArn);
     processor = new EventGrabberProcessor(properties, s3Client, snsClient, objectMapper, s3);
   }

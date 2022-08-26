@@ -172,8 +172,6 @@ Resources:
           Fn::GetAtt:
             - BucketStack
             - Outputs.QuakeNetSourceBucketName
-        HttpRequestTimeoutMs: !Ref HttpRequestTimeoutMs
-        HttpConnectionTimeoutMs: !Ref HttpConnectionTimeoutMs
         Version: @project.version@@dashTimestamp@
       TemplateURL:
         Fn::Sub:

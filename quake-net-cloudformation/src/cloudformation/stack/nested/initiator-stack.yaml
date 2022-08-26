@@ -26,12 +26,6 @@ Parameters:
     Type: String
   QuakeNetSourceBucketName:
     Type: String
-  HttpRequestTimeoutMs:
-    Description: The request timeout in milliseconds for HTTP requests
-    Type: Number
-  HttpConnectionTimeoutMs:
-    Description: The connection timeout in milliseconds for HTTP requests
-    Type: Number
   Version:
     Description: The build version
     Type: String
@@ -114,8 +108,6 @@ Resources:
         Variables:
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
           DEFAULT_START_DATE: !Ref DefaultStartDate
-          CONNECTION_TIMEOUT_MS: !Ref HttpConnectionTimeoutMs
-          REQUEST_TIMEOUT_MS: !Ref HttpRequestTimeoutMs
           TOPIC_ARN: !Ref InitiatorCompleteTopicArn
 
 
