@@ -117,6 +117,10 @@ Parameters:
     MinValue: 10
     MaxValue: 900
     Default: 480
+  UsgsBaseUrl:
+    Description: The base url for the earthquake API
+    Type: String
+    Default: 'https://earthquake.usgs.gov'
 
 
 
@@ -205,6 +209,7 @@ Resources:
         HttpConnectionTimeoutMs: !Ref HttpConnectionTimeoutMs
         Version: @project.version@@dashTimestamp@
         EventGrabberLambdaPageSize: !Ref EventGrabberLambdaPageSize
+        UsgsBaseUrl: !Ref UsgsBaseUrl
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-grabber-stack.yaml

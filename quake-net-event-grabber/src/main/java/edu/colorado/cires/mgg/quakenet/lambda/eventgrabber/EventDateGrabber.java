@@ -47,9 +47,8 @@ public class EventDateGrabber {
 
   private void notifyEventId(String eventId, LocalDate date) {
 
-    EventDetailGrabberMessage message = new EventDetailGrabberMessage();
-    message.setEventId(eventId);
-    message.setDate(date.toString());
+    EventDetailGrabberMessage message = EventDetailGrabberMessage.Builder.builder()
+        .withEventId(eventId).withDate(date.toString()).build();
 
     LOGGER.info("Triggering Detail Query: {}-{}", date, eventId);
 

@@ -1,23 +1,120 @@
 package edu.colorado.cires.mgg.quakenet.message;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+@JsonDeserialize(builder = EventDetailGrabberMessage.Builder.class)
 public class EventDetailGrabberMessage {
 
-  private String eventId;
-  private String date;
+  private final String eventId;
+  private final String date;
+  private final Map<String, Object> otherFields;
+
+  private EventDetailGrabberMessage(String eventId, String date, Map<String, Object> otherFields) {
+    this.eventId = eventId;
+    this.date = date;
+    this.otherFields = otherFields;
+  }
 
   public String getEventId() {
     return eventId;
-  }
-
-  public void setEventId(String eventId) {
-    this.eventId = eventId;
   }
 
   public String getDate() {
     return date;
   }
 
-  public void setDate(String date) {
-    this.date = date;
+  @JsonAnyGetter
+  public Map<String, Object> getOtherFields() {
+    return otherFields;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    EventDetailGrabberMessage message = (EventDetailGrabberMessage) o;
+    return Objects.equals(eventId, message.eventId) && Objects.equals(date, message.date) && Objects.equals(otherFields,
+        message.otherFields);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(eventId, date, otherFields);
+  }
+
+  @Override
+  public String toString() {
+    return "EventDetailGrabberMessage{" +
+        "eventId='" + eventId + '\'' +
+        ", date='" + date + '\'' +
+        ", otherFields=" + otherFields +
+        '}';
+  }
+
+  public static class Builder {
+
+    public static Builder builder() {
+      return new Builder();
+    }
+
+    public static Builder builder(EventDetailGrabberMessage message) {
+      return new Builder(message);
+    }
+
+    private String eventId;
+    private String date;
+    private Map<String, Object> otherFields = new HashMap<>();
+
+    private Builder() {
+
+    }
+
+    private Builder(EventDetailGrabberMessage message) {
+      if (message != null) {
+        eventId = message.eventId;
+        date = message.date;
+        otherFields = message.otherFields;
+      }
+    }
+
+    public Builder withEventId(String eventId) {
+      this.eventId = eventId;
+      return this;
+    }
+
+
+    public Builder withDate(String date) {
+      this.date = date;
+      return this;
+    }
+
+    @JsonIgnore
+    public Builder withOtherFields(Map<String, Object> otherFields) {
+      if (otherFields == null) {
+        otherFields = new HashMap<>();
+      }
+      this.otherFields = otherFields;
+      return this;
+    }
+
+    @JsonAnySetter
+    public Builder withOtherField(String name, Object value) {
+      this.otherFields.put(name, value);
+      return this;
+    }
+
+    public EventDetailGrabberMessage build() {
+      return new EventDetailGrabberMessage(eventId, date, otherFields);
+    }
   }
 }

@@ -29,9 +29,8 @@ public class Notifier {
   public void notify(String eventId, LocalDate date) {
     String json;
     try {
-      EventDetailGrabberMessage message = new EventDetailGrabberMessage();
-      message.setEventId(eventId);
-      message.setDate(date.toString());
+      EventDetailGrabberMessage message = EventDetailGrabberMessage.Builder.builder().withEventId(eventId).withDate(date.toString()).build();
+
       json = objectMapper.writeValueAsString(message);
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Unable to serialize message", e);

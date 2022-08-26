@@ -38,10 +38,14 @@ public class DataParser {
   private static Optional<String> getEventId(Event event) {
     Map<QName, String> attrs = event.getOtherAttributes();
     String datasource = null;
+    String eventsource = null;
     String eventid = null;
     for (Entry<QName, String> entry : attrs.entrySet()) {
       if (entry.getKey().getLocalPart().equals("eventid")) {
         eventid = entry.getValue();
+      }
+      if (entry.getKey().getLocalPart().equals("eventsource")) {
+        eventsource = entry.getValue();
       }
       if (entry.getKey().getLocalPart().equals("datasource")) {
         datasource = entry.getValue();
@@ -49,6 +53,9 @@ public class DataParser {
       if (datasource != null && eventid != null) {
         break;
       }
+    }
+    if (eventsource != null && eventid != null) {
+      return Optional.of(eventsource + eventid);
     }
     if (datasource != null && eventid != null) {
       return Optional.of(datasource + eventid);

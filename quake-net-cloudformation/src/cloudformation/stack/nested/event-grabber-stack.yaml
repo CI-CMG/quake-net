@@ -36,6 +36,9 @@ Parameters:
   EventGrabberLambdaPageSize:
     Description: The number of quake events to query at a time
     Type: Number
+  UsgsBaseUrl:
+    Description: The base url for the earthquake API
+    Type: String
 
 
 Conditions:
@@ -130,6 +133,7 @@ Resources:
           TOPIC_ARN: !Ref UsgsDateQueryCompleteTopicArn
           PAGE_SIZE: !Ref EventGrabberLambdaPageSize
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
+          BASE_URL: !Ref UsgsBaseUrl
 
 
 
