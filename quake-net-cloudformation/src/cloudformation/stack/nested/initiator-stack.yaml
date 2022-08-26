@@ -104,7 +104,7 @@ Resources:
       Code:
         S3Bucket: !Ref DeploymentBucketName
         S3Key: !Sub lambda/quake-net-initiator-${Version}-lambda.zip
-      Handler: edu.colorado.cires.mgg.quakenet.lambda.initiator.InitiatorLambdaHandler::handleRequest
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.initiator.InitiatorLambda::handleRequest
       Runtime: java11
       MemorySize: !Ref InitiatorLambdaMemorySize
       Timeout: !Ref InitiatorLambdaTimeout

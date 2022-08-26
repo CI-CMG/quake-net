@@ -43,8 +43,12 @@ public class QueryRangeIterator {
   }
 
   public void forEachDate(QueryRange queryRange) {
+
+    LOGGER.info("Processing Range {} - {}", queryRange.getStart(), queryRange.getEnd());
+
     LocalDate date = queryRange.getStart();
     while (date.isBefore(queryRange.getEnd()) || date.isEqual(queryRange.getEnd())) {
+      LOGGER.info("Processing {}", date);
       saveInfoFile(date);
       sendMessage(date);
       date = date.plusDays(1L);
@@ -78,6 +82,8 @@ public class QueryRangeIterator {
   }
 
   private void saveInfoFile(LocalDate date) {
+
+    LOGGER.info("Saving Info File: {}", date);
 
     String json;
     try {

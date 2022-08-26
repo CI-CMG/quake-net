@@ -15,6 +15,6 @@ aws cloudformation create-stack \
   --template-body file://target/quake-net-cloudformation-$version/deploy/deployment-stack.yaml \
   --parameters file://target/dev-resources/deployment-parameters.json
 
-sleep 30
+sleep 60
 
 aws --profile mggdev s3 sync target/quake-net-cloudformation-$version s3://$bucket_name/

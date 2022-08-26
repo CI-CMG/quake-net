@@ -74,7 +74,16 @@ Resources:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
 
+
   UsgsDateQueryCompleteTopicToUsgsEventDetailsQueryQueue:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt UsgsEventDetailsQueryQueue.Arn
+      TopicArn: !Ref UsgsDateQueryCompleteTopic
+      RawMessageDelivery: true
+
+  UsgsDateQueryCompleteTopicToUsgsEventDetailsQueryQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
@@ -95,6 +104,14 @@ Resources:
                 aws:SourceArn: !Ref UsgsDateQueryCompleteTopic
 
   InitiatorCompleteTopicToUsgsDateQueryQueue:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt UsgsDateQueryQueue.Arn
+      TopicArn: !Ref InitiatorCompleteTopic
+      RawMessageDelivery: true
+
+  InitiatorCompleteTopicToUsgsDateQueryQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
@@ -115,6 +132,14 @@ Resources:
                 aws:SourceArn: !Ref InitiatorCompleteTopic
 
   UsgsEventDetailsQueryCompleteTopicToReportInitiatorQueue:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt ReportInitiatorQueue.Arn
+      TopicArn: !Ref UsgsEventDetailsQueryCompleteTopic
+      RawMessageDelivery: true
+
+  UsgsEventDetailsQueryCompleteTopicToReportInitiatorQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
@@ -135,6 +160,14 @@ Resources:
                 aws:SourceArn: !Ref UsgsEventDetailsQueryCompleteTopic
 
   ReportInitiatorCompleteTopicToReportGenerationQueue:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      Endpoint: !GetAtt ReportGenerationQueue.Arn
+      TopicArn: !Ref ReportInitiatorCompleteTopic
+      RawMessageDelivery: true
+
+  ReportInitiatorCompleteTopicToReportGenerationQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:

@@ -41,7 +41,6 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-lambda-java-log4j2</artifactId>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -81,7 +80,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j18-impl</artifactId>
+      <artifactId>log4j-slf4j-impl</artifactId>
     </dependency>
 
   </dependencies>
