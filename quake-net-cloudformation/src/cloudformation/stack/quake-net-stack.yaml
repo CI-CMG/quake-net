@@ -24,14 +24,14 @@ Parameters:
     Type: Number
     MinValue: 10
     MaxValue: 900
-    Default: 120
+    Default: 500
   InitiatorCronExpression:
     Description: The EventBridge Schedule Expression to check for new event data
     Type: String
-    Default: 'cron(0 1 * * ? *)'
+    Default: 'cron(5 * * * ? *)'
   DefaultStartDate:
     Description: The earliest date to check for events when initializing the earthquake data set
-    Default: '1660-01-01'
+    Default: '2013-01-01'
     Type: String
   HttpRequestTimeoutMs:
     Description: The request timeout in milliseconds for HTTP requests
@@ -121,6 +121,10 @@ Parameters:
     Description: The base url for the earthquake API
     Type: String
     Default: 'https://earthquake.usgs.gov'
+  MaxDatesPerTrigger:
+    Description: The number of date requests for a cron trigger
+    Type: Number
+    Default: 366
 
 
 
@@ -177,6 +181,8 @@ Resources:
             - BucketStack
             - Outputs.QuakeNetSourceBucketName
         Version: @project.version@@dashTimestamp@
+        MaxDatesPerTrigger: !Ref MaxDatesPerTrigger
+        LogRetentionInDays: !Ref LogRetentionInDays
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/initiator-stack.yaml
@@ -210,6 +216,7 @@ Resources:
         Version: @project.version@@dashTimestamp@
         EventGrabberLambdaPageSize: !Ref EventGrabberLambdaPageSize
         UsgsBaseUrl: !Ref UsgsBaseUrl
+        LogRetentionInDays: !Ref LogRetentionInDays
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-grabber-stack.yaml
@@ -241,6 +248,7 @@ Resources:
         HttpRequestTimeoutMs: !Ref HttpRequestTimeoutMs
         HttpConnectionTimeoutMs: !Ref HttpConnectionTimeoutMs
         Version: @project.version@@dashTimestamp@
+        LogRetentionInDays: !Ref LogRetentionInDays
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-details-grabber-stack.yaml
@@ -270,6 +278,7 @@ Resources:
             - BucketStack
             - Outputs.QuakeNetSourceBucketName
         Version: @project.version@@dashTimestamp@
+        LogRetentionInDays: !Ref LogRetentionInDays
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/report-initiator-stack.yaml
@@ -295,6 +304,7 @@ Resources:
             - BucketStack
             - Outputs.QuakeNetSourceBucketName
         Version: @project.version@@dashTimestamp@
+        LogRetentionInDays: !Ref LogRetentionInDays
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/report-generation-stack.yaml

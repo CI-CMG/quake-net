@@ -33,6 +33,11 @@ Parameters:
   Version:
     Description: The build version
     Type: String
+  LogRetentionInDays:
+    Description: The number of days to keep CloudWatch logs
+    Type: Number
+    MinValue: 0
+    Default: 30
 
 
 Conditions:
@@ -127,7 +132,11 @@ Resources:
           TOPIC_ARN: !Ref UsgsEventDetailsQueryCompleteTopicArn
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
 
-
+  EventDetailsGrabberLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${EventDetailsGrabberLambda}
+      RetentionInDays: !Ref LogRetentionInDays
 
   EventDetailsGrabberLambdaQueueTrigger:
     Type: AWS::Lambda::EventSourceMapping

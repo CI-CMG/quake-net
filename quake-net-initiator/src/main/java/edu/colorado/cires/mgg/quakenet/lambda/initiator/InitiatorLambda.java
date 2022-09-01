@@ -23,6 +23,7 @@ public class InitiatorLambda implements RequestStreamHandler {
   private static final String downloadBucket = System.getenv("DOWNLOAD_BUCKET");
   private static final String defaultStartDate = System.getenv("DEFAULT_START_DATE");
   private static final String topicArn = System.getenv("TOPIC_ARN");
+  private static final Integer maxDatesPerTrigger = Integer.parseInt(System.getenv("MAX_DATES_PER_TRIGGER"));
   private static final S3Client s3Client = S3Client.builder().build();
   private static final SnsClient snsClient = SnsClient.builder().build();
   private static final ObjectMapper objectMapper = ObjectMapperCreator.create();
@@ -35,6 +36,7 @@ public class InitiatorLambda implements RequestStreamHandler {
     properties.setDownloadBucket(downloadBucket);
     properties.setDefaultStartDate(defaultStartDate);
     properties.setTopicArn(topicArn);
+    properties.setMaxDatesPerTrigger(maxDatesPerTrigger);
     processor = new EventGrabberProcessor(properties, s3Client, snsClient, objectMapper, s3);
   }
 

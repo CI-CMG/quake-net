@@ -20,6 +20,6 @@ public class EventGrabberProcessor {
   }
 
   public void process() {
-    queryRangeIterator.forEachDate(queryRangeDeterminer.getQueryRange());
+    queryRangeDeterminer.getQueryRange().ifPresent(queryRangeIterator::forEachDate);
   }
 }

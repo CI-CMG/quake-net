@@ -23,6 +23,7 @@ class QueryRangeIteratorTest {
     InitiatorProperties properties = new InitiatorProperties();
     properties.setDownloadBucket(bucketName);
     properties.setTopicArn(topicArn);
+    properties.setMaxDatesPerTrigger(366);
     QueryRangeIterator queryRangeIterator = new QueryRangeIterator(fileInfoSaver, messageSender, properties);
     QueryRange queryRange = new QueryRange(LocalDate.parse("2022-06-11"), LocalDate.parse("2022-06-15"));
     queryRangeIterator.forEachDate(queryRange);
@@ -88,6 +89,7 @@ class QueryRangeIteratorTest {
     InitiatorProperties properties = new InitiatorProperties();
     properties.setDownloadBucket(bucketName);
     properties.setTopicArn(topicArn);
+    properties.setMaxDatesPerTrigger(366);
     QueryRangeIterator queryRangeIterator = new QueryRangeIterator(fileInfoSaver, messageSender, properties);
     QueryRange queryRange = new QueryRange(LocalDate.parse("2024-02-27"), LocalDate.parse("2024-03-01"));
     queryRangeIterator.forEachDate(queryRange);
@@ -131,6 +133,64 @@ class QueryRangeIteratorTest {
             .withStartTime(LocalDate.parse("2024-03-01").atStartOfDay(ZoneId.of("UTC")).toInstant())
             .withEndTime(LocalDate.parse("2024-03-02").atStartOfDay(ZoneId.of("UTC")).toInstant())
             .build()));
+    verifyNoMoreInteractions(fileInfoSaver, messageSender);
+  }
+
+  @Test
+  void testLimit() {
+    String bucketName = "my-bucket";
+    String topicArn = "topicArn";
+    InfoFileSaver fileInfoSaver = mock(InfoFileSaver.class);
+    MessageSender messageSender = mock(MessageSender.class);
+    InitiatorProperties properties = new InitiatorProperties();
+    properties.setDownloadBucket(bucketName);
+    properties.setTopicArn(topicArn);
+    properties.setMaxDatesPerTrigger(4);
+    QueryRangeIterator queryRangeIterator = new QueryRangeIterator(fileInfoSaver, messageSender, properties);
+    QueryRange queryRange = new QueryRange(LocalDate.parse("2022-06-11"), LocalDate.parse("2022-06-15"));
+    queryRangeIterator.forEachDate(queryRange);
+    verify(fileInfoSaver, times(1)).saveInfoFile(
+        eq(bucketName),
+        eq("downloads/2022/06/2022-06-11/usgs-info-2022-06-11.json.gz"),
+        eq(InfoFile.Builder.builder().withDate(LocalDate.parse("2022-06-11")).build()));
+    verify(fileInfoSaver, times(1)).saveInfoFile(
+        eq(bucketName),
+        eq("downloads/2022/06/2022-06-12/usgs-info-2022-06-12.json.gz"),
+        eq(InfoFile.Builder.builder().withDate(LocalDate.parse("2022-06-12")).build()));
+    verify(fileInfoSaver, times(1)).saveInfoFile(
+        eq(bucketName),
+        eq("downloads/2022/06/2022-06-13/usgs-info-2022-06-13.json.gz"),
+        eq(InfoFile.Builder.builder().withDate(LocalDate.parse("2022-06-13")).build()));
+    verify(fileInfoSaver, times(1)).saveInfoFile(
+        eq(bucketName),
+        eq("downloads/2022/06/2022-06-14/usgs-info-2022-06-14.json.gz"),
+        eq(InfoFile.Builder.builder().withDate(LocalDate.parse("2022-06-14")).build()));
+
+    verify(messageSender, times(1)).sendMessage(
+        eq(topicArn),
+        eq(EventGrabberMessage.Builder.builder()
+            .withStartTime(LocalDate.parse("2022-06-11").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .withEndTime(LocalDate.parse("2022-06-12").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .build()));
+    verify(messageSender, times(1)).sendMessage(
+        eq(topicArn),
+        eq(EventGrabberMessage.Builder.builder()
+            .withStartTime(LocalDate.parse("2022-06-12").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .withEndTime(LocalDate.parse("2022-06-13").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .build()));
+    verify(messageSender, times(1)).sendMessage(
+        eq(topicArn),
+        eq(EventGrabberMessage.Builder.builder()
+            .withStartTime(LocalDate.parse("2022-06-13").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .withEndTime(LocalDate.parse("2022-06-14").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .build()));
+    verify(messageSender, times(1)).sendMessage(
+        eq(topicArn),
+        eq(EventGrabberMessage.Builder.builder()
+            .withStartTime(LocalDate.parse("2022-06-14").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .withEndTime(LocalDate.parse("2022-06-15").atStartOfDay(ZoneId.of("UTC")).toInstant())
+            .build()));
+
     verifyNoMoreInteractions(fileInfoSaver, messageSender);
   }
 }

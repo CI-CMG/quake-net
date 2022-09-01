@@ -25,6 +25,11 @@ Parameters:
   Version:
     Description: The build version
     Type: String
+  LogRetentionInDays:
+    Description: The number of days to keep CloudWatch logs
+    Type: Number
+    MinValue: 0
+    Default: 30
 
 
 Conditions:
@@ -108,7 +113,11 @@ Resources:
         Variables:
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
 
-
+  ReportGenerationLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ReportGenerationLambda}
+      RetentionInDays: !Ref LogRetentionInDays
 
   ReportGenerationLambdaQueueTrigger:
     Type: AWS::Lambda::EventSourceMapping

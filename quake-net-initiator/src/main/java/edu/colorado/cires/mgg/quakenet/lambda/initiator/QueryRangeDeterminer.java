@@ -2,6 +2,7 @@ package edu.colorado.cires.mgg.quakenet.lambda.initiator;
 
 import java.time.LocalDate;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.function.Supplier;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -22,7 +23,7 @@ public class QueryRangeDeterminer {
 
   // downloads/2012/05/2012-05-10/usgs-info-2012-05-10.json.gz
   // downloads/2012/05/2012-05-10/<eventId>/event-details-2012-05-10-<eventId>.json.gz
-  public QueryRange getQueryRange() {
+  public Optional<QueryRange> getQueryRange() {
 
     LocalDate maxDate = LocalDate.parse(initiatorProperties.getDefaultStartDate()).minusDays(1);
 
@@ -43,7 +44,11 @@ public class QueryRangeDeterminer {
     }
 
     LocalDate lastYear = nowFactory.get().minusYears(1);
-    return new QueryRange(maxDate.plusDays(1), lastYear);
+    QueryRange queryRange = new QueryRange(maxDate.plusDays(1), lastYear);
+    if (maxDate.isEqual(lastYear) || maxDate.isAfter(lastYear)) {
+      return Optional.empty();
+    }
+    return Optional.of(queryRange);
   }
 
 }

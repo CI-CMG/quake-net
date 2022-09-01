@@ -39,6 +39,11 @@ Parameters:
   UsgsBaseUrl:
     Description: The base url for the earthquake API
     Type: String
+  LogRetentionInDays:
+    Description: The number of days to keep CloudWatch logs
+    Type: Number
+    MinValue: 0
+    Default: 30
 
 
 Conditions:
@@ -135,7 +140,11 @@ Resources:
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
           BASE_URL: !Ref UsgsBaseUrl
 
-
+  EventGrabberLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${EventGrabberLambda}
+      RetentionInDays: !Ref LogRetentionInDays
 
   EventGrabberLambdaQueueTrigger:
     Type: AWS::Lambda::EventSourceMapping

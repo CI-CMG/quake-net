@@ -5,6 +5,15 @@ public class InitiatorProperties {
   private String downloadBucket;
   private String defaultStartDate;
   private String topicArn;
+  private Integer maxDatesPerTrigger;
+
+  public Integer getMaxDatesPerTrigger() {
+    return maxDatesPerTrigger;
+  }
+
+  public void setMaxDatesPerTrigger(Integer maxDatesPerTrigger) {
+    this.maxDatesPerTrigger = maxDatesPerTrigger;
+  }
 
   public String getDownloadBucket() {
     return downloadBucket;

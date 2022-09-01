@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -77,11 +75,12 @@ public class ReportTrigger {
 
     LocalDate date = LocalDate.parse(message.getDate());
 
-    if(!isReportExists(date)) {
+    if (!isReportExists(date)) {
       Set<String> expectedEventIds = new HashSet<>();
       Set<String> actualEventIds = new HashSet<>();
 
-      BucketIterator bucketIterator = bucketIteratorFactory.create(s3, properties.getBucketName(), String.format("downloads/%d/%02d/", date.getYear(), date.getMonthValue()));
+      BucketIterator bucketIterator = bucketIteratorFactory.create(s3, properties.getBucketName(),
+          String.format("downloads/%d/%02d/", date.getYear(), date.getMonthValue()));
       while (bucketIterator.hasNext()) {
         S3Object s3Object = bucketIterator.next();
         String key = s3Object.key();

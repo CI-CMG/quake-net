@@ -32,7 +32,7 @@ public class ReportInitiatorLambda implements RequestHandler<SQSEvent, SQSBatchR
     properties = new ReportInitiatorProperties();
     properties.setBucketName(downloadBucket);
     properties.setTopicArn(topicArn);
-    reportTrigger = new ReportTrigger(properties, s3Client, objectMapper, snsClient);
+    reportTrigger = new ReportTrigger(properties, s3Client, objectMapper, snsClient, BucketIterator::new);
   }
 
 

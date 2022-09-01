@@ -28,12 +28,14 @@ public class QueryRangeIterator {
 
     LOGGER.info("Processing Range {} - {}", queryRange.getStart(), queryRange.getEnd());
 
+    int count = 0;
     LocalDate date = queryRange.getStart();
-    while (date.isBefore(queryRange.getEnd()) || date.isEqual(queryRange.getEnd())) {
+    while (count < properties.getMaxDatesPerTrigger() && (date.isBefore(queryRange.getEnd()) || date.isEqual(queryRange.getEnd()))) {
       LOGGER.info("Processing {}", date);
       saveInfoFile(date);
       sendMessage(date);
       date = date.plusDays(1);
+      count++;
     }
   }
 
