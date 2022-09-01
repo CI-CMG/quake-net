@@ -6,5 +6,9 @@
   {
     "ParameterKey": "RolePermissionsBoundary",
     "ParameterValue": "Customer_Admin_PermissionBoundary"
+  },
+  {
+    "ParameterKey": "DefaultStartDate",
+    "ParameterValue": "2020-01-01"
   }
 ]

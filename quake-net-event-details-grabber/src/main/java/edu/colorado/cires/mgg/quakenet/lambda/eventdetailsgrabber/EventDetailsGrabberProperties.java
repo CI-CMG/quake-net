@@ -7,6 +7,15 @@ public class EventDetailsGrabberProperties {
   private long requestTimeoutMs;
   private String bucketName;
   private String topicArn;
+  private String baseUrl;
+
+  public String getBaseUrl() {
+    return baseUrl;
+  }
+
+  public void setBaseUrl(String baseUrl) {
+    this.baseUrl = baseUrl;
+  }
 
   public long getConnectionTimeoutMs() {
     return connectionTimeoutMs;

@@ -2,23 +2,15 @@ package edu.colorado.cires.mgg.quakenet.lambda.eventdetailsgrabber;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.colorado.cires.cmg.s3out.MultipartUploadRequest;
-import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
-import edu.colorado.cires.cmg.s3out.S3OutputStream;
 import edu.colorado.cires.mgg.quakenet.geojson.GeoJson;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.zip.GZIPOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -35,6 +27,17 @@ import org.slf4j.LoggerFactory;
 public class UsgsApiQueryier {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UsgsApiQueryier.class);
+
+  private final S3Doer s3Doer;
+  private final EventDetailsGrabberProperties properties;
+  private final ObjectMapper objectMapper;
+
+  public UsgsApiQueryier(S3Doer s3Doer, EventDetailsGrabberProperties properties, ObjectMapper objectMapper) {
+    this.s3Doer = s3Doer;
+    this.properties = properties;
+    this.objectMapper = objectMapper;
+  }
+
 
   private static String readContent(CloseableHttpResponse response) {
     try {
@@ -60,10 +63,10 @@ public class UsgsApiQueryier {
 
   }
 
-  private static String buildUri(String eventId, String type) {
+  private String buildUri(String eventId, String type) {
     try {
 
-      return new URIBuilder("https://earthquake.usgs.gov/fdsnws/event/1/query")
+      return new URIBuilder(properties.getBaseUrl() + "/fdsnws/event/1/query")
           .addParameter("format", type)
           .addParameter("eventid", eventId)
           .build().toString();
@@ -81,15 +84,13 @@ public class UsgsApiQueryier {
     }
   }
 
-  private static String queryDetails(
-      EventDetailsGrabberProperties properties,
+
+  private String queryDetails(
       EventDetailGrabberMessage message,
-      S3ClientMultipartUpload s3,
-      Supplier<String> uriSupplier,
+      String uri,
       BiFunction<String, String, String> fileNameSupplier
   ) {
 
-    String uri = uriSupplier.get();
     LOGGER.info("Request: {}", uri);
 
     CloseableHttpClient httpclient = createClient(properties);
@@ -107,17 +108,8 @@ public class UsgsApiQueryier {
           String month = parts[1];
           String key = "downloads/" + year + "/" + month + "/" + date + "/" + eventId + "/" + fileNameSupplier.apply(date, eventId);
 
-          try (
-              InputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
-              S3OutputStream s3OutputStream = S3OutputStream.builder()
-                  .s3(s3)
-                  .uploadRequest(MultipartUploadRequest.builder().bucket(properties.getBucketName()).key(key).build())
-                  .autoComplete(false)
-                  .build();
-              OutputStream outputStream = new GZIPOutputStream(s3OutputStream)
-          ) {
-            IOUtils.copy(inputStream, outputStream);
-            s3OutputStream.done();
+          try {
+            s3Doer.saveFile(properties.getBucketName(), key, content);
           } catch (IOException e) {
             throw new IllegalStateException("An error occurred getting USGS data: " + uri, e);
           }
@@ -138,25 +130,21 @@ public class UsgsApiQueryier {
   }
 
 
-  public static String queryDetailsQuakeMl(EventDetailsGrabberProperties properties, EventDetailGrabberMessage message, S3ClientMultipartUpload s3) {
+  public String queryDetailsQuakeMl(EventDetailGrabberMessage message) {
     return queryDetails(
-        properties,
         message,
-        s3,
-        () -> buildUri(message.getEventId(), "quakeml"),
+        buildUri(message.getEventId(), "quakeml"),
         (date, eventId) -> "event-details-" + date + "-" + eventId + ".xml.gz");
   }
 
-  public static String queryDetailsJson(EventDetailsGrabberProperties properties, EventDetailGrabberMessage message, S3ClientMultipartUpload s3) {
+  public String queryDetailsJson(EventDetailGrabberMessage message) {
     return queryDetails(
-        properties,
         message,
-        s3,
-        () -> buildUri(message.getEventId(), "geojson"),
+        buildUri(message.getEventId(), "geojson"),
         (date, eventId) -> "event-details-" + date + "-" + eventId + ".json.gz");
   }
 
-  public static Optional<String> parseCdiUri(String content, ObjectMapper objectMapper) {
+  public Optional<String> parseCdiUri(String content) {
     GeoJson geoJson;
     try {
       geoJson = objectMapper.readValue(content, GeoJson.class);
@@ -167,17 +155,13 @@ public class UsgsApiQueryier {
   }
 
 
-  public static String queryCdi(
-      EventDetailsGrabberProperties properties,
+  public String queryCdi(
       EventDetailGrabberMessage message,
-      S3ClientMultipartUpload s3,
       String uri
   ) {
     return queryDetails(
-        properties,
         message,
-        s3,
-        () -> uri,
+        uri,
         (date, eventId) -> "event-cdi-" + date + "-" + eventId + ".xml.gz");
   }
 

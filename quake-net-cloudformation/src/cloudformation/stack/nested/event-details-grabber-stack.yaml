@@ -38,6 +38,9 @@ Parameters:
     Type: Number
     MinValue: 0
     Default: 30
+  UsgsBaseUrl:
+    Description: The base url for the earthquake API
+    Type: String
 
 
 Conditions:
@@ -131,6 +134,7 @@ Resources:
           REQUEST_TIMEOUT_MS: !Ref HttpRequestTimeoutMs
           TOPIC_ARN: !Ref UsgsEventDetailsQueryCompleteTopicArn
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
+          BASE_URL: !Ref UsgsBaseUrl
 
   EventDetailsGrabberLogGroup:
     Type: AWS::Logs::LogGroup

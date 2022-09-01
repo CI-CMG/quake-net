@@ -11,10 +11,8 @@ import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -28,11 +26,15 @@ public class EventDetailsGrabberLambda implements RequestHandler<SQSEvent, SQSBa
   private static final long connectionTimeoutMs = Long.parseLong(System.getenv("CONNECTION_TIMEOUT_MS"));
   private static final long requestTimeoutMs = Long.parseLong(System.getenv("REQUEST_TIMEOUT_MS"));
   private static final String topicArn = System.getenv("TOPIC_ARN");
+  private static final String baseUrl = System.getenv("BASE_URL");
   private static final SnsClient snsClient = SnsClient.builder().build();
   private static final S3ClientMultipartUpload s3 = AwsS3ClientMultipartUpload.builder().s3(S3Client.builder().build()).build();
   private static final ObjectMapper objectMapper = ObjectMapperCreator.create();
   private static final EventDetailsGrabberProperties properties;
   private static final Notifier notifier;
+  private static final EventDetailsGrabberExecutor executor;
+  private static final UsgsApiQueryier usgsApiQueryier;
+  private static final S3Doer s3Doer;
 
   static {
     properties = new EventDetailsGrabberProperties();
@@ -40,14 +42,17 @@ public class EventDetailsGrabberLambda implements RequestHandler<SQSEvent, SQSBa
     properties.setConnectionTimeoutMs(connectionTimeoutMs);
     properties.setRequestTimeoutMs(requestTimeoutMs);
     properties.setTopicArn(topicArn);
+    properties.setBaseUrl(baseUrl);
     notifier = new Notifier(snsClient, objectMapper, properties);
+    s3Doer = new S3Doer(s3);
+    usgsApiQueryier = new UsgsApiQueryier(s3Doer, properties, objectMapper);
+    executor = new EventDetailsGrabberExecutor(usgsApiQueryier, notifier);
   }
 
 
   @Override
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LOGGER.info("Event: {}", sqsEvent);
-
 
     List<BatchItemFailure> batchItemFailures = new ArrayList<>();
     String messageId = "";
@@ -57,12 +62,7 @@ public class EventDetailsGrabberLambda implements RequestHandler<SQSEvent, SQSBa
 
         EventDetailGrabberMessage message = objectMapper.readValue(record.getBody(), EventDetailGrabberMessage.class);
 
-        Optional<String> cdiUri = UsgsApiQueryier.parseCdiUri(UsgsApiQueryier.queryDetailsJson(properties, message, s3), objectMapper);
-        cdiUri.ifPresent(uri -> UsgsApiQueryier.queryCdi(properties, message, s3, uri));
-        //This file must be written last.  It indicates that all data was retrieved.
-        UsgsApiQueryier.queryDetailsQuakeMl(properties, message, s3);
-
-        notifier.notify(message.getEventId(), LocalDate.parse(message.getDate()));
+        executor.execute(message);
 
       } catch (Exception e) {
         batchItemFailures.add(new BatchItemFailure(messageId));

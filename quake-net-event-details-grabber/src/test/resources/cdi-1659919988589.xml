@@ -1,0 +1,772 @@
+<cdidata>
+  <cdi type="city">
+    <location name="Chacao::Miranda::Venezuela">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>1995</dist>
+      <lat>10.50</lat>
+      <lon>-66.85</lon>
+      <name>Chacao</name>
+    </location>
+    <location name="Cuenca::Azuay::Ecuador">
+      <cdi>3.9554</cdi>
+      <nresp>21</nresp>
+      <dist>324</dist>
+      <lat>-2.90</lat>
+      <lon>-79.01</lon>
+      <name>Cuenca</name>
+    </location>
+    <location name="Guaranda::Bolívar::Ecuador">
+      <cdi>2.6912</cdi>
+      <nresp>1</nresp>
+      <dist>418</dist>
+      <lat>-1.61</lat>
+      <lon>-79.01</lon>
+      <name>Guaranda</name>
+    </location>
+    <location name="Guano::Chimborazo::Ecuador">
+      <cdi>4.3417</cdi>
+      <nresp>1</nresp>
+      <dist>398</dist>
+      <lat>-1.58</lat>
+      <lon>-78.64</lon>
+      <name>Guano</name>
+    </location>
+    <location name="Riobamba::Chimborazo::Ecuador">
+      <cdi>4.2757</cdi>
+      <nresp>2</nresp>
+      <dist>391</dist>
+      <lat>-1.67</lat>
+      <lon>-78.65</lon>
+      <name>Riobamba</name>
+    </location>
+    <location name="Latacunga::Cotopaxi::Ecuador">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>456</dist>
+      <lat>-0.93</lat>
+      <lon>-78.61</lon>
+      <name>Latacunga</name>
+    </location>
+    <location name="Saquisilí::Cotopaxi::Ecuador">
+      <cdi>2.8973</cdi>
+      <nresp>2</nresp>
+      <dist>469</dist>
+      <lat>-0.83</lat>
+      <lon>-78.67</lon>
+      <name>Saquisilí</name>
+    </location>
+    <location name="Machala::El Oro::Ecuador">
+      <cdi>3.7738</cdi>
+      <nresp>1</nresp>
+      <dist>394</dist>
+      <lat>-3.26</lat>
+      <lon>-79.96</lon>
+      <name>Machala</name>
+    </location>
+    <location name="Pasaje::El Oro::Ecuador">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>376</dist>
+      <lat>-3.32</lat>
+      <lon>-79.80</lon>
+      <name>Pasaje</name>
+    </location>
+    <location name="Rosa Zárate::Esmeraldas::Ecuador">
+      <cdi>4.7129</cdi>
+      <nresp>1</nresp>
+      <dist>620</dist>
+      <lat>0.33</lat>
+      <lon>-79.48</lon>
+      <name>Rosa Zárate</name>
+    </location>
+    <location name="El Triunfo::Guayas::Ecuador">
+      <cdi>4.0696</cdi>
+      <nresp>3</nresp>
+      <dist>466</dist>
+      <lat>-1.93</lat>
+      <lon>-79.97</lon>
+      <name>El Triunfo</name>
+    </location>
+    <location name="Eloy Alfaro::Guayas::Ecuador">
+      <cdi>3.6956</cdi>
+      <nresp>4</nresp>
+      <dist>439</dist>
+      <lat>-2.17</lat>
+      <lon>-79.83</lon>
+      <name>Eloy Alfaro</name>
+    </location>
+    <location name="Guayaquil::Guayas::Ecuador">
+      <cdi>3.3741</cdi>
+      <nresp>10</nresp>
+      <dist>442</dist>
+      <lat>-2.21</lat>
+      <lon>-79.90</lon>
+      <name>Guayaquil</name>
+    </location>
+    <location name="Playas::Guayas::Ecuador">
+      <cdi>2.2372</cdi>
+      <nresp>1</nresp>
+      <dist>463</dist>
+      <lat>-2.63</lat>
+      <lon>-80.39</lon>
+      <name>Playas</name>
+    </location>
+    <location name="Samborondón::Guayas::Ecuador">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>446</dist>
+      <lat>-1.95</lat>
+      <lon>-79.74</lon>
+      <name>Samborondón</name>
+    </location>
+    <location name="Santa Lucía::Guayas::Ecuador">
+      <cdi>4.9941</cdi>
+      <nresp>2</nresp>
+      <dist>453</dist>
+      <lat>-2.18</lat>
+      <lon>-80.00</lon>
+      <name>Santa Lucía</name>
+    </location>
+    <location name="Catamayo::Loja::Ecuador">
+      <cdi>4.6538</cdi>
+      <nresp>2</nresp>
+      <dist>314</dist>
+      <lat>-3.98</lat>
+      <lon>-79.36</lon>
+      <name>Catamayo</name>
+    </location>
+    <location name="Loja::Loja::Ecuador">
+      <cdi>4.8535</cdi>
+      <nresp>14</nresp>
+      <dist>299</dist>
+      <lat>-3.99</lat>
+      <lon>-79.21</lon>
+      <name>Loja</name>
+    </location>
+    <location name="Babahoyo::Los Ríos::Ecuador">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>441</dist>
+      <lat>-1.80</lat>
+      <lon>-79.54</lon>
+      <name>Babahoyo</name>
+    </location>
+    <location name="Quevedo::Los Ríos::Ecuador">
+      <cdi>3.7738</cdi>
+      <nresp>1</nresp>
+      <dist>499</dist>
+      <lat>-1.02</lat>
+      <lon>-79.48</lon>
+      <name>Quevedo</name>
+    </location>
+    <location name="Bahía de Caráquez::Manabí::Ecuador">
+      <cdi>2.9958</cdi>
+      <nresp>2</nresp>
+      <dist>601</dist>
+      <lat>-0.60</lat>
+      <lon>-80.44</lon>
+      <name>Bahía de Caráquez</name>
+    </location>
+    <location name="Calceta::Manabí::Ecuador">
+      <cdi>3.7738</cdi>
+      <nresp>1</nresp>
+      <dist>562</dist>
+      <lat>-0.84</lat>
+      <lon>-80.17</lon>
+      <name>Calceta</name>
+    </location>
+    <location name="Chone::Manabí::Ecuador">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>568</dist>
+      <lat>-0.69</lat>
+      <lon>-80.09</lon>
+      <name>Chone</name>
+    </location>
+    <location name="Jipijapa::Manabí::Ecuador">
+      <cdi>3.4498</cdi>
+      <nresp>2</nresp>
+      <dist>556</dist>
+      <lat>-1.35</lat>
+      <lon>-80.58</lon>
+      <name>Jipijapa</name>
+    </location>
+    <location name="Manta::Manabí::Ecuador">
+      <cdi>3.9076</cdi>
+      <nresp>4</nresp>
+      <dist>595</dist>
+      <lat>-0.96</lat>
+      <lon>-80.72</lon>
+      <name>Manta</name>
+    </location>
+    <location name="Pedernales::Manabí::Ecuador">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>630</dist>
+      <lat>0.07</lat>
+      <lon>-80.05</lon>
+      <name>Pedernales</name>
+    </location>
+    <location name="Portoviejo::Manabí::Ecuador">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>567</dist>
+      <lat>-1.06</lat>
+      <lon>-80.46</lon>
+      <name>Portoviejo</name>
+    </location>
+    <location name="Rocafuerte::Manabí::Ecuador">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>578</dist>
+      <lat>-0.92</lat>
+      <lon>-80.46</lon>
+      <name>Rocafuerte</name>
+    </location>
+    <location name="Sucre::Manabí::Ecuador">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>551</dist>
+      <lat>-1.26</lat>
+      <lon>-80.44</lon>
+      <name>Sucre</name>
+    </location>
+    <location name="Macas::Morona Santiago::Ecuador">
+      <cdi>3.7738</cdi>
+      <nresp>2</nresp>
+      <dist>306</dist>
+      <lat>-2.31</lat>
+      <lon>-78.12</lon>
+      <name>Macas</name>
+    </location>
+    <location name="Sucúa::Morona Santiago::Ecuador">
+      <cdi>4.4700</cdi>
+      <nresp>1</nresp>
+      <dist>296</dist>
+      <lat>-2.46</lat>
+      <lon>-78.17</lon>
+      <name>Sucúa</name>
+    </location>
+    <location name="Archidona::Napo::Ecuador">
+      <cdi>2.6912</cdi>
+      <nresp>1</nresp>
+      <dist>428</dist>
+      <lat>-0.90</lat>
+      <lon>-77.81</lon>
+      <name>Archidona</name>
+    </location>
+    <location name="Tena::Napo::Ecuador">
+      <cdi>3.6692</cdi>
+      <nresp>6</nresp>
+      <dist>420</dist>
+      <lat>-0.98</lat>
+      <lon>-77.81</lon>
+      <name>Tena</name>
+    </location>
+    <location name="Puyo::Pastaza::Ecuador">
+      <cdi>3.7738</cdi>
+      <nresp>2</nresp>
+      <dist>376</dist>
+      <lat>-1.48</lat>
+      <lon>-77.99</lon>
+      <name>Puyo</name>
+    </location>
+    <location name="Quito::Pichincha::Ecuador">
+      <cdi>2.8734</cdi>
+      <nresp>21</nresp>
+      <dist>524</dist>
+      <lat>-0.19</lat>
+      <lon>-78.50</lon>
+      <name>Quito</name>
+    </location>
+    <location name="Santo Domingo::Pichincha::Ecuador">
+      <cdi>2.6051</cdi>
+      <nresp>2</nresp>
+      <dist>549</dist>
+      <lat>-0.25</lat>
+      <lon>-79.16</lon>
+      <name>Santo Domingo</name>
+    </location>
+    <location name="Ambato::Tungurahua::Ecuador">
+      <cdi>2.4868</cdi>
+      <nresp>3</nresp>
+      <dist>428</dist>
+      <lat>-1.24</lat>
+      <lon>-78.62</lon>
+      <name>Ambato</name>
+    </location>
+    <location name="Baños::Tungurahua::Ecuador">
+      <cdi>3.3976</cdi>
+      <nresp>7</nresp>
+      <dist>404</dist>
+      <lat>-1.39</lat>
+      <lon>-78.43</lon>
+      <name>Baños</name>
+    </location>
+    <location name="Yantzaza::Zamora Chinchipe::Ecuador">
+      <cdi>5.0476</cdi>
+      <nresp>1</nresp>
+      <dist>258</dist>
+      <lat>-3.85</lat>
+      <lon>-78.75</lon>
+      <name>Yantzaza</name>
+    </location>
+    <location name="Zamora::Zamora Chinchipe::Ecuador">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>274</dist>
+      <lat>-4.07</lat>
+      <lon>-78.97</lon>
+      <name>Zamora</name>
+    </location>
+    <location name="Cruzeiro do Sul::Acre::Brazil">
+      <cdi>2.6912</cdi>
+      <nresp>2</nresp>
+      <dist>590</dist>
+      <lat>-7.63</lat>
+      <lon>-72.67</lon>
+      <name>Cruzeiro do Sul</name>
+    </location>
+    <location name="Mâncio Lima::Acre::Brazil">
+      <cdi>2.6912</cdi>
+      <nresp>1</nresp>
+      <dist>570</dist>
+      <lat>-7.62</lat>
+      <lon>-72.90</lon>
+      <name>Mâncio Lima</name>
+    </location>
+    <location name="Tarauacá::Acre::Brazil">
+      <cdi>2.6912</cdi>
+      <nresp>1</nresp>
+      <dist>792</dist>
+      <lat>-8.16</lat>
+      <lon>-70.78</lon>
+      <name>Tarauacá</name>
+    </location>
+    <location name="Benjamin Constant::Amazonas::Brazil">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>762</dist>
+      <lat>-4.37</lat>
+      <lon>-70.04</lon>
+      <name>Benjamin Constant</name>
+    </location>
+    <location name="Manaus::Amazonas::Brazil">
+      <cdi>2.2372</cdi>
+      <nresp>2</nresp>
+      <dist>1875</dist>
+      <lat>-3.12</lat>
+      <lon>-60.02</lon>
+      <name>Manaus</name>
+    </location>
+    <location name="Tapauá::Amazonas::Brazil">
+      <cdi>2.2372</cdi>
+      <nresp>1</nresp>
+      <dist>1500</dist>
+      <lat>-5.75</lat>
+      <lon>-63.39</lon>
+      <name>Tapauá</name>
+    </location>
+    <location name="Calama::Antofagasta::Chile">
+      <cdi>1</cdi>
+      <nresp>1</nresp>
+      <dist>2168</dist>
+      <lat>-22.45</lat>
+      <lon>-68.92</lon>
+      <name>Calama</name>
+    </location>
+    <location name="Georgetown::Demerara-Mahaica::Guyana">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>2423</dist>
+      <lat>6.79</lat>
+      <lon>-58.16</lon>
+      <name>Georgetown</name>
+    </location>
+    <location name="Iquique::Tarapacá::Chile">
+      <cdi>1</cdi>
+      <nresp>1</nresp>
+      <dist>1892</dist>
+      <lat>-20.23</lat>
+      <lon>-70.14</lon>
+      <name>Iquique</name>
+    </location>
+    <location name="Leticia::Amazonas::Colombia">
+      <cdi>2.6912</cdi>
+      <nresp>1</nresp>
+      <dist>773</dist>
+      <lat>-4.22</lat>
+      <lon>-69.94</lon>
+      <name>Leticia</name>
+    </location>
+    <location name="Bogotá::Bogotá::Colombia">
+      <cdi>2.4108</cdi>
+      <nresp>6</nresp>
+      <dist>1058</dist>
+      <lat>4.63</lat>
+      <lon>-74.09</lon>
+      <name>Bogotá</name>
+    </location>
+    <location name="Florencia::Caquetá::Colombia">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>696</dist>
+      <lat>1.61</lat>
+      <lon>-75.62</lon>
+      <name>Florencia</name>
+    </location>
+    <location name="Popayán::Cauca::Colombia">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>772</dist>
+      <lat>2.42</lat>
+      <lon>-76.61</lon>
+      <name>Popayán</name>
+    </location>
+    <location name="Cota::Cundinamarca::Colombia">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>1077</dist>
+      <lat>4.82</lat>
+      <lon>-74.10</lon>
+      <name>Cota</name>
+    </location>
+    <location name="La Calera::Cundinamarca::Colombia">
+      <cdi>2</cdi>
+      <nresp>4</nresp>
+      <dist>1071</dist>
+      <lat>4.72</lat>
+      <lon>-73.97</lon>
+      <name>La Calera</name>
+    </location>
+    <location name="Chachagüí::Nariño::Colombia">
+      <cdi>2.6912</cdi>
+      <nresp>1</nresp>
+      <dist>642</dist>
+      <lat>1.21</lat>
+      <lon>-77.29</lon>
+      <name>Chachagüí</name>
+    </location>
+    <location name="Cuaspud::Nariño::Colombia">
+      <cdi>3.7738</cdi>
+      <nresp>1</nresp>
+      <dist>611</dist>
+      <lat>0.87</lat>
+      <lon>-77.73</lon>
+      <name>Cuaspud</name>
+    </location>
+    <location name="Ipiales::Nariño::Colombia">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>606</dist>
+      <lat>0.83</lat>
+      <lon>-77.65</lon>
+      <name>Ipiales</name>
+    </location>
+    <location name="Pasto::Nariño::Colombia">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>642</dist>
+      <lat>1.21</lat>
+      <lon>-77.28</lon>
+      <name>Pasto</name>
+    </location>
+    <location name="Mocoa::Putumayo::Colombia">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>634</dist>
+      <lat>1.15</lat>
+      <lon>-76.63</lon>
+      <name>Mocoa</name>
+    </location>
+    <location name="Buenaventura::Valle del Cauca::Colombia">
+      <cdi>2.0372</cdi>
+      <nresp>1</nresp>
+      <dist>932</dist>
+      <lat>3.89</lat>
+      <lon>-77.04</lon>
+      <name>Buenaventura</name>
+    </location>
+    <location name="Jamundí::Valle del Cauca::Colombia">
+      <cdi>1</cdi>
+      <nresp>1</nresp>
+      <dist>864</dist>
+      <lat>3.26</lat>
+      <lon>-76.54</lon>
+      <name>Jamundí</name>
+    </location>
+    <location name="Trujillo::Valle del Cauca::Colombia">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>969</dist>
+      <lat>4.21</lat>
+      <lon>-76.32</lon>
+      <name>Trujillo</name>
+    </location>
+    <location name="Río Hato::Coclé::Panama">
+      <cdi>2.0372</cdi>
+      <nresp>1</nresp>
+      <dist>1474</dist>
+      <lat>8.38</lat>
+      <lon>-80.17</lon>
+      <name>Río Hato</name>
+    </location>
+    <location name="San Miguelito::Panamá::Panama">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>1527</dist>
+      <lat>9.03</lat>
+      <lon>-79.50</lon>
+      <name>San Miguelito</name>
+    </location>
+    <location name="Bagua Grande::Amazonas::Peru">
+      <cdi>5.2537</cdi>
+      <nresp>1</nresp>
+      <dist>263</dist>
+      <lat>-5.78</lat>
+      <lon>-78.44</lon>
+      <name>Bagua Grande</name>
+    </location>
+    <location name="Chachapoyas::Amazonas::Peru">
+      <cdi>7.8044</cdi>
+      <nresp>4</nresp>
+      <dist>260</dist>
+      <lat>-6.23</lat>
+      <lon>-77.87</lon>
+      <name>Chachapoyas</name>
+    </location>
+    <location name="Huaraz::Ancash::Peru">
+      <cdi>5.1522</cdi>
+      <nresp>1</nresp>
+      <dist>579</dist>
+      <lat>-9.53</lat>
+      <lon>-77.53</lon>
+      <name>Huaraz</name>
+    </location>
+    <location name="Huarmey::Ancash::Peru">
+      <cdi>4.0696</cdi>
+      <nresp>1</nresp>
+      <dist>649</dist>
+      <lat>-10.07</lat>
+      <lon>-78.16</lon>
+      <name>Huarmey</name>
+    </location>
+    <location name="Yungay::Ancash::Peru">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>542</dist>
+      <lat>-9.15</lat>
+      <lon>-77.75</lon>
+      <name>Yungay</name>
+    </location>
+    <location name="Cajamarca::Cajamarca::Peru">
+      <cdi>3.5503</cdi>
+      <nresp>2</nresp>
+      <dist>374</dist>
+      <lat>-7.16</lat>
+      <lon>-78.52</lon>
+      <name>Cajamarca</name>
+    </location>
+    <location name="Jaén::Cajamarca::Peru">
+      <cdi>6.2813</cdi>
+      <nresp>1</nresp>
+      <dist>289</dist>
+      <lat>-5.71</lat>
+      <lon>-78.81</lon>
+      <name>Jaén</name>
+    </location>
+    <location name="Lima::Lima Provincias::Peru">
+      <cdi>3.0849</cdi>
+      <nresp>23</nresp>
+      <dist>850</dist>
+      <lat>-12.07</lat>
+      <lon>-77.05</lon>
+      <name>Lima</name>
+    </location>
+    <location name="Huánuco::Huánuco::Peru">
+      <cdi>4.9863</cdi>
+      <nresp>7</nresp>
+      <dist>619</dist>
+      <lat>-9.92</lat>
+      <lon>-76.24</lon>
+      <name>Huánuco</name>
+    </location>
+    <location name="Ica::Ica::Peru">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>1074</dist>
+      <lat>-14.06</lat>
+      <lon>-75.75</lon>
+      <name>Ica</name>
+    </location>
+    <location name="Huancayo::Junín::Peru">
+      <cdi>4.4700</cdi>
+      <nresp>1</nresp>
+      <dist>868</dist>
+      <lat>-12.07</lat>
+      <lon>-75.21</lon>
+      <name>Huancayo</name>
+    </location>
+    <location name="Guadalupe::La Libertad::Peru">
+      <cdi>3.0916</cdi>
+      <nresp>1</nresp>
+      <dist>446</dist>
+      <lat>-7.26</lat>
+      <lon>-79.49</lon>
+      <name>Guadalupe</name>
+    </location>
+    <location name="Huanchanco::La Libertad::Peru">
+      <cdi>3.0152</cdi>
+      <nresp>2</nresp>
+      <dist>490</dist>
+      <lat>-8.08</lat>
+      <lon>-79.12</lon>
+      <name>Huanchanco</name>
+    </location>
+    <location name="Trujillo::La Libertad::Peru">
+      <cdi>3.9108</cdi>
+      <nresp>7</nresp>
+      <dist>488</dist>
+      <lat>-8.11</lat>
+      <lon>-79.03</lon>
+      <name>Trujillo</name>
+    </location>
+    <location name="Pimentel::Lambayeque::Peru">
+      <cdi>5.1522</cdi>
+      <nresp>1</nresp>
+      <dist>451</dist>
+      <lat>-6.83</lat>
+      <lon>-79.93</lon>
+      <name>Pimentel</name>
+    </location>
+    <location name="Santa Rosa::Lambayeque::Peru">
+      <cdi>4.3417</cdi>
+      <nresp>3</nresp>
+      <dist>439</dist>
+      <lat>-6.77</lat>
+      <lon>-79.84</lon>
+      <name>Santa Rosa</name>
+    </location>
+    <location name="Chosica::Lima Provincias::Peru">
+      <cdi>2.6912</cdi>
+      <nresp>1</nresp>
+      <dist>835</dist>
+      <lat>-11.93</lat>
+      <lon>-76.71</lon>
+      <name>Chosica</name>
+    </location>
+    <location name="Mala::Lima Provincias::Peru">
+      <cdi>2</cdi>
+      <nresp>1</nresp>
+      <dist>915</dist>
+      <lat>-12.66</lat>
+      <lon>-76.64</lon>
+      <name>Mala</name>
+    </location>
+    <location name="San Luis::Lima Provincias::Peru">
+      <cdi>3.3780</cdi>
+      <nresp>21</nresp>
+      <dist>851</dist>
+      <lat>-12.08</lat>
+      <lon>-77.00</lon>
+      <name>San Luis</name>
+    </location>
+    <location name="Santa María::Lima Provincias::Peru">
+      <cdi>2.8163</cdi>
+      <nresp>2</nresp>
+      <dist>842</dist>
+      <lat>-12.00</lat>
+      <lon>-76.90</lon>
+      <name>Santa María</name>
+    </location>
+    <location name="Barranca::Loreto::Peru">
+      <cdi>8.2755</cdi>
+      <nresp>5</nresp>
+      <dist>132</dist>
+      <lat>-4.83</lat>
+      <lon>-76.70</lon>
+      <name>Barranca</name>
+    </location>
+    <location name="Iquitos::Loreto::Peru">
+      <cdi>4.0696</cdi>
+      <nresp>1</nresp>
+      <dist>427</dist>
+      <lat>-3.75</lat>
+      <lon>-73.20</lon>
+      <name>Iquitos</name>
+    </location>
+    <location name="Yurimaguas::Loreto::Peru">
+      <cdi>7.1562</cdi>
+      <nresp>1</nresp>
+      <dist>218</dist>
+      <lat>-5.91</lat>
+      <lon>-76.10</lon>
+      <name>Yurimaguas</name>
+    </location>
+    <location name="Piura::Piura::Peru">
+      <cdi>4.0696</cdi>
+      <nresp>1</nresp>
+      <dist>448</dist>
+      <lat>-5.19</lat>
+      <lon>-80.63</lon>
+      <name>Piura</name>
+    </location>
+    <location name="Sullana::Piura::Peru">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>449</dist>
+      <lat>-4.89</lat>
+      <lon>-80.68</lon>
+      <name>Sullana</name>
+    </location>
+    <location name="Talara::Piura::Peru">
+      <cdi>3.4498</cdi>
+      <nresp>1</nresp>
+      <dist>511</dist>
+      <lat>-4.58</lat>
+      <lon>-81.28</lon>
+      <name>Talara</name>
+    </location>
+    <location name="Lamas::San Martín::Peru">
+      <cdi>6.3544</cdi>
+      <nresp>1</nresp>
+      <dist>253</dist>
+      <lat>-6.43</lat>
+      <lon>-76.52</lon>
+      <name>Lamas</name>
+    </location>
+    <location name="Moyobamba::San Martín::Peru">
+      <cdi>5.5412</cdi>
+      <nresp>3</nresp>
+      <dist>214</dist>
+      <lat>-6.03</lat>
+      <lon>-76.97</lon>
+      <name>Moyobamba</name>
+    </location>
+    <location name="Rioja::San Martín::Peru">
+      <cdi>7.3143</cdi>
+      <nresp>3</nresp>
+      <dist>220</dist>
+      <lat>-6.06</lat>
+      <lon>-77.18</lon>
+      <name>Rioja</name>
+    </location>
+    <location name="Sauce::San Martín::Peru">
+      <cdi>6.2813</cdi>
+      <nresp>1</nresp>
+      <dist>289</dist>
+      <lat>-6.73</lat>
+      <lon>-76.17</lon>
+      <name>Sauce</name>
+    </location>
+    <location name="Pucallpa::Ucayali::Peru">
+      <cdi>3.6156</cdi>
+      <nresp>2</nresp>
+      <dist>517</dist>
+      <lat>-8.39</lat>
+      <lon>-74.53</lon>
+      <name>Pucallpa</name>
+    </location>
+  </cdi>
+</cdidata>

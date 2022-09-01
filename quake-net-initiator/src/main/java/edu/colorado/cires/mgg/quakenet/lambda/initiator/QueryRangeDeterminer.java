@@ -44,11 +44,10 @@ public class QueryRangeDeterminer {
     }
 
     LocalDate lastYear = nowFactory.get().minusYears(1);
-    QueryRange queryRange = new QueryRange(maxDate.plusDays(1), lastYear);
     if (maxDate.isEqual(lastYear) || maxDate.isAfter(lastYear)) {
       return Optional.empty();
     }
-    return Optional.of(queryRange);
+    return Optional.of(new QueryRange(maxDate.plusDays(1), lastYear));
   }
 
 }

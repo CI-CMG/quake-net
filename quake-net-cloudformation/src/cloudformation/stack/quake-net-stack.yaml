@@ -28,7 +28,7 @@ Parameters:
   InitiatorCronExpression:
     Description: The EventBridge Schedule Expression to check for new event data
     Type: String
-    Default: 'cron(5 * * * ? *)'
+    Default: 'cron(*/30 * * * ? *)'
   DefaultStartDate:
     Description: The earliest date to check for events when initializing the earthquake data set
     Default: '2013-01-01'
@@ -249,6 +249,7 @@ Resources:
         HttpConnectionTimeoutMs: !Ref HttpConnectionTimeoutMs
         Version: @project.version@@dashTimestamp@
         LogRetentionInDays: !Ref LogRetentionInDays
+        UsgsBaseUrl: !Ref UsgsBaseUrl
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-details-grabber-stack.yaml

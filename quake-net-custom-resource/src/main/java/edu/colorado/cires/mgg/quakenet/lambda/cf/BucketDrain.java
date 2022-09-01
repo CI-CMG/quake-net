@@ -25,19 +25,26 @@ public final class BucketDrain {
           .bucket(bucketName)
           .build();
 
-      List<ObjectIdentifier> objIds = new ArrayList<>();
+      List<List<ObjectIdentifier>> objIdGroups = new ArrayList<>();
       ListObjectsV2Response listObjectsResponse;
       do {
+        List<ObjectIdentifier> objIds = new ArrayList<>();
         listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
         for (S3Object s3Object : listObjectsResponse.contents()) {
           objIds.add(ObjectIdentifier.builder().key(s3Object.key()).build());
         }
+        if(!objIds.isEmpty()) {
+          objIdGroups.add(objIds);
+        }
       } while (listObjectsResponse.isTruncated());
 
-      s3.deleteObjects(DeleteObjectsRequest.builder()
-          .bucket(bucketName)
-          .delete(Delete.builder().objects(objIds).build())
-          .build());
+      objIdGroups.stream().parallel().forEach(objIds -> {
+        s3.deleteObjects(DeleteObjectsRequest.builder()
+            .bucket(bucketName)
+            .delete(Delete.builder().objects(objIds).build())
+            .build());
+      });
+
 
       LOGGER.info("Done Emptying Bucket: {}", bucketName);
     } catch (Exception e) {
