@@ -20,7 +20,8 @@
   </properties>
 
   <modules>
-    <module>query-net-common</module>
+    <module>quake-net-common</module>
+    <module>quake-net-s3-utils</module>
     <module>quake-net-quake-ml-jaxb</module>
     <module>quake-net-cdidata-jaxb</module>
     <module>quake-net-pdf-generator</module>

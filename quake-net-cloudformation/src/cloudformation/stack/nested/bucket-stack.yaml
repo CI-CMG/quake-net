@@ -89,9 +89,14 @@ Resources:
         S3Key: !Sub lambda/quake-net-custom-resource-${Version}-lambda.zip
       Handler: edu.colorado.cires.mgg.quakenet.lambda.cf.EmptyBucketLambda::handleRequest
       Runtime: java11
-      MemorySize: 1024
+      MemorySize: 512
       Timeout: 900
       Role: !GetAtt BucketDrainLambdaRole.Arn
+      Environment:
+        Variables:
+          TIMEOUT_SECONDS: 900
+
+
 
 
 ############################### QuakeNetSourceBucket ########################

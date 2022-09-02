@@ -2,6 +2,7 @@ package edu.colorado.cires.mgg.quakenet.lambda.initiator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
+import edu.colorado.cires.mgg.quakenet.s3.util.BucketIterator;
 import java.time.LocalDate;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sns.SnsClient;

@@ -4,9 +4,13 @@ import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.S3Client;
 
 public class QueryRangeDeterminer {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(QueryRangeDeterminer.class);
 
   private final InitiatorProperties initiatorProperties;
   private final S3Client s3;
@@ -42,7 +46,7 @@ public class QueryRangeDeterminer {
         }
       }
     }
-
+    LOGGER.info("Max Date: {}", maxDate);
     LocalDate lastYear = nowFactory.get().minusYears(1);
     if (maxDate.isEqual(lastYear) || maxDate.isAfter(lastYear)) {
       return Optional.empty();

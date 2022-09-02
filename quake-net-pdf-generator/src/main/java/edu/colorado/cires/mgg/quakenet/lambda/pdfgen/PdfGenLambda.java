@@ -10,13 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
-import edu.colorado.cires.mgg.quakenet.model.QnEvent;
+import edu.colorado.cires.mgg.quakenet.s3.util.BucketIterator;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
-import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import org.quakeml.xmlns.quakeml._1.Quakeml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -32,17 +29,21 @@ public class PdfGenLambda implements RequestHandler<SQSEvent, SQSBatchResponse> 
 
 
   private static final PdfGenProperties properties;
+  private static final DataParser dataParser;
+  private static final DataOperations dataWriter;
+  private static final PdfExecutor executor;
 
   static {
     properties = new PdfGenProperties();
     properties.setBucketName(downloadBucket);
+    dataWriter = new DataOperations(s3, s3Client);
+    dataParser = new DataParser(properties, dataWriter, (bucketName, prefix) -> new BucketIterator(s3Client, bucketName, prefix));
+    executor = new PdfExecutor(properties, dataParser, dataWriter);
   }
 
   @Override
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LOGGER.info("Event: {}", sqsEvent);
-
-    DataParser dataParser = new DataParser(properties, s3Client);
 
     List<BatchItemFailure> batchItemFailures = new ArrayList<>();
     String messageId = "";
@@ -51,19 +52,8 @@ public class PdfGenLambda implements RequestHandler<SQSEvent, SQSBatchResponse> 
         messageId = record.getMessageId();
 
         ReportGenerateMessage message = objectMapper.readValue(record.getBody(), ReportGenerateMessage.class);
-        List<KeySet> keySets = dataParser.getRequiredKeys(message.getYear(), message.getMonth());
-        List<QnEvent> events = new ArrayList<>();
-        for (KeySet keySet : keySets) {
-          Quakeml quakeml = dataParser.readQuakeMl(keySet.getDetailsKey())
-              .orElseThrow(() -> new RuntimeException("Unable to read quake details: " + keySet.getDetailsKey()));
-          Optional<Cdidata> cdidata = dataParser.readCdi(keySet.getDetailsKey());
-          QnEvent event = DataParser.parseQuakeDetails(quakeml);
-          cdidata.ifPresent(data -> DataParser.enrichCdi(event, data));
-          events.add(event);
-        }
 
-        DataWriter dataWriter = new DataWriter(properties, s3);
-        dataWriter.writePdf(events, message);
+        executor.execute(message);
 
       } catch (Exception e) {
         batchItemFailures.add(new BatchItemFailure(messageId));

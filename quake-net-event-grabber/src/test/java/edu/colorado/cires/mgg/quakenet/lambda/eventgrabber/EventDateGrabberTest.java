@@ -11,12 +11,14 @@ import static org.mockito.Mockito.when;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -62,10 +64,10 @@ class EventDateGrabberTest {
     properties.setBucketName(bucketName);
     properties.setTopicArn(topicArn);
 
-    InfoFileSaver infoFileSaver = mock(InfoFileSaver.class);
+    InfoFileS3Actions infoFileSaver = mock(InfoFileS3Actions.class);
     MessageSender messageSender = mock(MessageSender.class);
 
-    when(infoFileSaver.readInfoFile(eq(bucketName), eq("downloads/2022/06/2022-06-11/usgs-info-2022-06-11.json.gz"))).thenReturn(infoFile);
+    when(infoFileSaver.readInfoFile(eq(bucketName), eq("downloads/2022/06/2022-06-11/usgs-info-2022-06-11.json.gz"))).thenReturn(Optional.of(infoFile));
 
     EventDateGrabber eventDateGrabber = new EventDateGrabber(properties, infoFileSaver, messageSender);
 

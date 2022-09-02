@@ -14,7 +14,12 @@
   <dependencies>
     <dependency>
       <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>query-net-common</artifactId>
+      <artifactId>quake-net-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
+      <artifactId>quake-net-s3-utils</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -80,6 +85,11 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
 

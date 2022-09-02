@@ -7,7 +7,11 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse.BatchItemFa
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
+import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
+import edu.colorado.cires.mgg.quakenet.s3.util.BucketIterator;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +27,7 @@ public class ReportInitiatorLambda implements RequestHandler<SQSEvent, SQSBatchR
   private static final String downloadBucket = System.getenv("DOWNLOAD_BUCKET");
   private static final String topicArn = System.getenv("TOPIC_ARN");
   private static final S3Client s3Client = S3Client.builder().build();
+  private static final S3ClientMultipartUpload s3 = AwsS3ClientMultipartUpload.builder().s3(s3Client).build();
   private static final SnsClient snsClient = SnsClient.builder().build();
   private static final ObjectMapper objectMapper = ObjectMapperCreator.create();
   private static final ReportInitiatorProperties properties;
@@ -32,7 +37,13 @@ public class ReportInitiatorLambda implements RequestHandler<SQSEvent, SQSBatchR
     properties = new ReportInitiatorProperties();
     properties.setBucketName(downloadBucket);
     properties.setTopicArn(topicArn);
-    reportTrigger = new ReportTrigger(properties, s3Client, objectMapper, snsClient, BucketIterator::new);
+    MessageSender messageSender = new MessageSender(snsClient, objectMapper);
+    InfoFileS3Actions infoFileS3Actions = new InfoFileS3Actions(s3, s3Client, objectMapper);
+    reportTrigger = new ReportTrigger(
+        properties,
+        messageSender,
+        (bucketName, prefix) -> new BucketIterator(s3Client, bucketName, prefix),
+        infoFileS3Actions);
   }
 
 

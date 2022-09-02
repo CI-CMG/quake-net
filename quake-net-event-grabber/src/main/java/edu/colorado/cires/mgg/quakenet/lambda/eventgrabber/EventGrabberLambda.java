@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,7 @@ public class EventGrabberLambda implements RequestHandler<SQSEvent, SQSBatchResp
     properties.setTopicArn(topicArn);
     properties.setBucketName(downloadBucket);
     properties.setBaseUrl(baseUrl);//https://earthquake.usgs.gov
-    InfoFileSaver infoFileSaver = new InfoFileSaver(s3, s3Client, objectMapper);
+    InfoFileS3Actions infoFileSaver = new InfoFileS3Actions(s3, s3Client, objectMapper);
     MessageSender messageSender = new MessageSender(snsClient, objectMapper);
     eventDetailsGrabber = new EventDateGrabber(properties, infoFileSaver, messageSender);
   }

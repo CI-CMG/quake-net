@@ -37,12 +37,16 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-dlq
+      #14 days
+      MessageRetentionPeriod: 1209600
 
   UsgsDateQueryQueue:
     Type: AWS::SQS::Queue
     Properties:
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-date-query
+        #14 days
+      MessageRetentionPeriod: 1209600
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
@@ -52,6 +56,8 @@ Resources:
     Properties:
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-details-query
+      #14 days
+      MessageRetentionPeriod: 1209600
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
@@ -61,6 +67,8 @@ Resources:
     Properties:
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-report-initiatior
+      #14 days
+      MessageRetentionPeriod: 1209600
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
@@ -70,6 +78,8 @@ Resources:
     Properties:
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-report-generation
+      #14 days
+      MessageRetentionPeriod: 1209600
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
@@ -171,7 +181,7 @@ Resources:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-        - !Ref ReportInitiatorQueue
+        - !Ref ReportGenerationQueue
       PolicyDocument:
         Version: 2012-10-17
         Statement:

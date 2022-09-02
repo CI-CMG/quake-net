@@ -14,7 +14,12 @@
   <dependencies>
     <dependency>
       <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>query-net-common</artifactId>
+      <artifactId>quake-net-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
+      <artifactId>quake-net-s3-utils</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

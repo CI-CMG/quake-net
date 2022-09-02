@@ -3,6 +3,7 @@ package edu.colorado.cires.mgg.quakenet.lambda.eventgrabber;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -14,10 +15,10 @@ public class EventDateGrabber {
   private static final Logger LOGGER = LoggerFactory.getLogger(EventDateGrabber.class);
 
   private final EventGrabberProperties properties;
-  private final InfoFileSaver infoFileSaver;
+  private final InfoFileS3Actions infoFileSaver;
   private final MessageSender messageSender;
 
-  public EventDateGrabber(EventGrabberProperties properties, InfoFileSaver infoFileSaver, MessageSender messageSender) {
+  public EventDateGrabber(EventGrabberProperties properties, InfoFileS3Actions infoFileSaver, MessageSender messageSender) {
     this.properties = properties;
     this.infoFileSaver = infoFileSaver;
     this.messageSender = messageSender;
@@ -38,7 +39,8 @@ public class EventDateGrabber {
         date.getMonthValue(),
         date,
         date);
-    InfoFile infoFile = infoFileSaver.readInfoFile(properties.getBucketName(), key);
+    InfoFile infoFile = infoFileSaver.readInfoFile(properties.getBucketName(), key)
+        .orElseThrow(() -> new IllegalStateException("File missing: " + key));
     infoFile = InfoFile.Builder.builder(infoFile).withEventIds(eventIds).build();
     infoFileSaver.saveInfoFile(properties.getBucketName(), key, infoFile);
     eventIds.forEach(eventId -> notifyEventId(eventId, date));

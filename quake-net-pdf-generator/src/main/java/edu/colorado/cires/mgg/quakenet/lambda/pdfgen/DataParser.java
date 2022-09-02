@@ -4,16 +4,13 @@ import edu.colorado.cires.mgg.quakenet.model.QnCdi;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import gov.noaa.ncei.xmlns.cdidata.Location;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,10 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import org.quakeml.xmlns.bed._1.Comment;
 import org.quakeml.xmlns.bed._1.Event;
@@ -38,107 +32,55 @@ import org.quakeml.xmlns.bed._1.TimeQuantity;
 import org.quakeml.xmlns.quakeml._1.Quakeml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class DataParser {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataParser.class);
 
   private final PdfGenProperties properties;
-  private final S3Client s3Client;
+  private final DataOperations dataWriter;
+  private final BucketIteratorFactory bucketIteratorFactory;
 
-  public DataParser(PdfGenProperties properties, S3Client s3Client) {
+  public DataParser(PdfGenProperties properties, DataOperations dataWriter, BucketIteratorFactory bucketIteratorFactory) {
     this.properties = properties;
-    this.s3Client = s3Client;
+    this.dataWriter = dataWriter;
+    this.bucketIteratorFactory = bucketIteratorFactory;
   }
 
   private boolean isReportExists(int year, int month) {
-    HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-        .bucket(properties.getBucketName())
-        .key(String.format("reports/%d/%02d/earthquake-info-%d-%02d.pdf", year, month, year, month))
-        .build();
-    try {
-      s3Client.headObject(headObjectRequest);
-    } catch (NoSuchKeyException e) {
-      return false;
-    }
-    return true;
+    String key = String.format("reports/%d/%02d/earthquake-info-%d-%02d.pdf", year, month, year, month);
+    return dataWriter.isReportExists(properties.getBucketName(), key);
   }
 
   public List<KeySet> getRequiredKeys(int year, int month) {
     List<KeySet> results = new ArrayList<>();
 
-    if(!isReportExists(year, month)) {
-      ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
-          .bucket(properties.getBucketName())
-          .prefix(String.format("downloads/%d/%02d/", year, month))
-          .build();
+    if (!isReportExists(year, month)) {
 
-      ListObjectsV2Response listObjectsResponse;
-      do {
-        listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
-        for (S3Object s3Object : listObjectsResponse.contents()) {
-          String[] parts = s3Object.key().split("/");
-          if (parts.length == 6) {
-            LocalDate date = LocalDate.parse(parts[3]);
-            String eventId = parts[4];
-            String file = parts[6];
-            if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))) {
-              results.add(new KeySet(
-                  s3Object.key(),
-                  s3Object.key().replace("/" + file, String.format("/event-cdi-%s-%s.xml.gz", date, eventId))
-              ));
-            }
-
+      Iterator<String> it = bucketIteratorFactory.create(properties.getBucketName(), String.format("downloads/%d/%02d/", year, month));
+      while (it.hasNext()) {
+        String key = it.next();
+        String[] parts = key.split("/");
+        if (parts.length == 6) {
+          LocalDate date = LocalDate.parse(parts[3]);
+          String eventId = parts[4];
+          String file = parts[5];
+          if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))) {
+            results.add(new KeySet(
+                key,
+                key.replace("/" + file, String.format("/event-cdi-%s-%s.xml.gz", date, eventId))
+            ));
           }
+
         }
-      } while (listObjectsResponse.isTruncated());
+      }
 
       Collections.sort(results);
     } else {
       LOGGER.info("Report already existed: {}-{}", year, month);
     }
 
-
-
     return results;
-  }
-
-  public Optional<Cdidata> readCdi(String key) {
-    GetObjectRequest objectRequest = GetObjectRequest
-        .builder()
-        .bucket(properties.getBucketName())
-        .key(key)
-        .build();
-    try (InputStream in = new GZIPInputStream(new BufferedInputStream(s3Client.getObject(objectRequest)))) {
-      return Optional.of((Cdidata) JAXBContext.newInstance(Cdidata.class).createUnmarshaller().unmarshal(in));
-    } catch (NoSuchKeyException e) {
-      return Optional.empty();
-    } catch (IOException | JAXBException e) {
-      throw new IllegalStateException("Unable to read CDI data", e);
-    }
-  }
-
-
-  public Optional<Quakeml> readQuakeMl(String key) {
-    GetObjectRequest objectRequest = GetObjectRequest
-        .builder()
-        .bucket(properties.getBucketName())
-        .key(key)
-        .build();
-    try (InputStream in = new GZIPInputStream(new BufferedInputStream(s3Client.getObject(objectRequest)))) {
-      return Optional.of((Quakeml) JAXBContext.newInstance(Quakeml.class).createUnmarshaller().unmarshal(in));
-    } catch (NoSuchKeyException e) {
-      return Optional.empty();
-    } catch (IOException | JAXBException e) {
-      throw new IllegalStateException("Unable to read QuakeML data", e);
-    }
   }
 
   public static void enrichCdi(QnEvent event, Cdidata cdidata) {
