@@ -78,7 +78,7 @@ Parameters:
     Description: The maximum number of instances of the event details grabber lambda
     Type: Number
     MinValue: 1
-    Default: 10
+    Default: 50
   EventDetailsGrabberLambdaTimeout:
     Description: The timeout in seconds for the event details grabber lambda
     Type: Number
