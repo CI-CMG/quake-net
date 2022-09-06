@@ -46,7 +46,7 @@ public class EventGrabberLambda implements RequestHandler<SQSEvent, SQSBatchResp
     properties.setBaseUrl(baseUrl);//https://earthquake.usgs.gov
     InfoFileS3Actions infoFileSaver = new InfoFileS3Actions(s3, s3Client, objectMapper);
     MessageSender messageSender = new MessageSender(snsClient, objectMapper);
-    eventDetailsGrabber = new EventDateGrabber(properties, infoFileSaver, messageSender);
+    eventDetailsGrabber = new EventDateGrabber(properties, infoFileSaver, messageSender, objectMapper);
   }
 
   @Override

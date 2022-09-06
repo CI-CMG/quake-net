@@ -40,6 +40,14 @@ Resources:
       #14 days
       MessageRetentionPeriod: 1209600
 
+  UsgsEventDetailsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: !Ref VisibilityTimeoutSeconds
+      QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-details-dlq
+      #14 days
+      MessageRetentionPeriod: 1209600
+
   UsgsDateQueryQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -59,7 +67,7 @@ Resources:
       #14 days
       MessageRetentionPeriod: 1209600
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        deadLetterTargetArn: !GetAtt UsgsEventDetailsDeadLetterQueue.Arn
         maxReceiveCount: !Ref MessageMaxReceiveCount
 
   ReportInitiatorQueue:
@@ -223,3 +231,7 @@ Outputs:
     Value: !Ref ReportGenerationQueue
   ReportGenerationQueueArn:
     Value: !GetAtt ReportGenerationQueue.Arn
+  UsgsEventDetailsDeadLetterQueueUrl:
+    Value: !Ref UsgsEventDetailsDeadLetterQueue
+  UsgsEventDetailsDeadLetterQueueArn:
+    Value: !GetAtt UsgsEventDetailsDeadLetterQueue.Arn

@@ -19,40 +19,28 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-public class EventDetailsGrabberLambda implements RequestHandler<SQSEvent, SQSBatchResponse> {
+public class EventDetailsGrabberDlqLambda implements RequestHandler<SQSEvent, SQSBatchResponse> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(EventDetailsGrabberLambda.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(EventDetailsGrabberDlqLambda.class);
 
   private static final String downloadBucket = System.getenv("DOWNLOAD_BUCKET");
-  private static final long connectionTimeoutMs = Long.parseLong(System.getenv("CONNECTION_TIMEOUT_MS"));
-  private static final long requestTimeoutMs = Long.parseLong(System.getenv("REQUEST_TIMEOUT_MS"));
   private static final String topicArn = System.getenv("TOPIC_ARN");
-  private static final String baseUrl = System.getenv("BASE_URL");
-  private static final String retryQueueUrl = System.getenv("RETRY_QUEUE_URL");
-  private static final int retryDelaySeconds = Integer.parseInt(System.getenv("RETRY_DELAY_SECONDS"));
   private static final SnsClient snsClient = SnsClient.builder().build();
   private static final SqsClient sqsClient = SqsClient.builder().build();
   private static final S3ClientMultipartUpload s3 = AwsS3ClientMultipartUpload.builder().s3(S3Client.builder().build()).build();
   private static final ObjectMapper objectMapper = ObjectMapperCreator.create();
   private static final EventDetailsGrabberProperties properties;
   private static final Notifier notifier;
-  private static final EventDetailsGrabberExecutor executor;
-  private static final UsgsApiQueryier usgsApiQueryier;
+  private static final EventDetailsGrabberDlqExecutor executor;
   private static final S3Doer s3Doer;
 
   static {
     properties = new EventDetailsGrabberProperties();
     properties.setBucketName(downloadBucket);
-    properties.setConnectionTimeoutMs(connectionTimeoutMs);
-    properties.setRequestTimeoutMs(requestTimeoutMs);
     properties.setTopicArn(topicArn);
-    properties.setBaseUrl(baseUrl);
-    properties.setRetryQueueUrl(retryQueueUrl);
-    properties.setRetryDelaySeconds(retryDelaySeconds);
     notifier = new Notifier(snsClient, sqsClient, objectMapper);
     s3Doer = new S3Doer(s3);
-    usgsApiQueryier = new UsgsApiQueryier(s3Doer, properties, objectMapper);
-    executor = new EventDetailsGrabberExecutor(usgsApiQueryier, notifier, properties);
+    executor = new EventDetailsGrabberDlqExecutor(s3Doer, notifier, properties);
   }
 
 
@@ -66,9 +54,11 @@ public class EventDetailsGrabberLambda implements RequestHandler<SQSEvent, SQSBa
       try {
         messageId = record.getMessageId();
 
-        EventDetailGrabberMessage message = objectMapper.readValue(record.getBody(), EventDetailGrabberMessage.class);
+        EventDetailGrabberMessage eventMessage = objectMapper.readValue(record.getBody(), EventDetailGrabberMessage.class);
 
-        executor.execute(message);
+        String message = record.toString();
+
+        executor.execute(message, eventMessage);
 
       } catch (Exception e) {
         batchItemFailures.add(new BatchItemFailure(messageId));

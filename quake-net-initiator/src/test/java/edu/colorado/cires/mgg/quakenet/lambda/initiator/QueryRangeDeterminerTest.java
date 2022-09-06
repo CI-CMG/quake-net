@@ -2,21 +2,25 @@ package edu.colorado.cires.mgg.quakenet.lambda.initiator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.services.s3.S3Client;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 class QueryRangeDeterminerTest {
 
   @Test
   void testHasObjects() {
-    List<String> s3ObjectList = Arrays.asList(
+    Set<String> s3ObjectList = new HashSet<>(Arrays.asList(
         "downloads/2012/05/2012-05-10/usgs-info-2012-05-10.json.gz",
         "downloads/2012/05/2012-05-10/id1/event-details-2012-05-10-id1.json.gz",
         "downloads/2012/05/2012-05-10/id2/event-details-2012-05-10-id2.json.gz",
@@ -25,42 +29,46 @@ class QueryRangeDeterminerTest {
         "downloads/2013/05/2013-05-10/id1/event-details-2013-05-10-id4.json.gz",
         "downloads/2013/05/2013-05-10/id2/event-details-2013-05-10-id5.json.gz",
         "downloads/2013/05/2013-05-10/id3/event-details-2013-05-10-id6.json.gz"
-    );
+    ));
     String bucketName = "my-bucket";
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    S3Client s3 = mock(S3Client.class);
-    BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    when(bucketIteratorFactory.create(s3, bucketName, "downloads/")).thenReturn(s3ObjectList.iterator());
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
+      @Override
+      public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
+        String key = invocationOnMock.getArgument(1, String.class);
+        return s3ObjectList.contains(key);
+      }
+    });
+
     LocalDate now = LocalDate.parse("2017-01-20");
-    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, s3, bucketIteratorFactory, () -> now);
+    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, () -> now, infoFileS3Actions);
     QueryRange queryRange = queryRangeDeterminer.getQueryRange().get();
-    QueryRange expected = new QueryRange(LocalDate.parse("2013-05-11"),  LocalDate.parse("2016-01-20"));
+    QueryRange expected = new QueryRange(LocalDate.parse("2013-05-11"), LocalDate.parse("2016-01-20"));
     assertEquals(expected, queryRange);
   }
 
   @Test
   void testEmpty() {
-    List<String> s3ObjectList = Collections.emptyList();
     String bucketName = "my-bucket";
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("2013-01-01");
-    S3Client s3 = mock(S3Client.class);
-    BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    when(bucketIteratorFactory.create(s3, bucketName, "downloads/")).thenReturn(s3ObjectList.iterator());
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenReturn(false);
     LocalDate now = LocalDate.parse("2017-01-20");
-    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, s3, bucketIteratorFactory, () -> now);
+    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, () -> now, infoFileS3Actions);
     QueryRange queryRange = queryRangeDeterminer.getQueryRange().get();
-    QueryRange expected = new QueryRange(LocalDate.parse("2013-01-01"),  LocalDate.parse("2016-01-20"));
+    QueryRange expected = new QueryRange(LocalDate.parse("2013-01-01"), LocalDate.parse("2016-01-20"));
     assertEquals(expected, queryRange);
   }
 
 
   @Test
   void testLeapYear() {
-    List<String> s3ObjectList = Arrays.asList(
+    Set<String> s3ObjectList = new HashSet<>(Arrays.asList(
         "downloads/2012/05/2012-05-10/usgs-info-2012-05-10.json.gz",
         "downloads/2012/05/2012-05-10/id1/event-details-2012-05-10-id1.json.gz",
         "downloads/2012/05/2012-05-10/id2/event-details-2012-05-10-id2.json.gz",
@@ -69,24 +77,29 @@ class QueryRangeDeterminerTest {
         "downloads/2013/05/2013-05-10/id1/event-details-2013-05-10-id4.json.gz",
         "downloads/2013/05/2013-05-10/id2/event-details-2013-05-10-id5.json.gz",
         "downloads/2013/05/2013-05-10/id3/event-details-2013-05-10-id6.json.gz"
-    );
+    ));
     String bucketName = "my-bucket";
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    S3Client s3 = mock(S3Client.class);
-    BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    when(bucketIteratorFactory.create(s3, bucketName, "downloads/")).thenReturn(s3ObjectList.iterator());
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
+      @Override
+      public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
+        String key = invocationOnMock.getArgument(1, String.class);
+        return s3ObjectList.contains(key);
+      }
+    });
     LocalDate now = LocalDate.parse("2024-02-29");
-    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, s3, bucketIteratorFactory, () -> now);
+    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, () -> now, infoFileS3Actions);
     QueryRange queryRange = queryRangeDeterminer.getQueryRange().get();
-    QueryRange expected = new QueryRange(LocalDate.parse("2013-05-11"),  LocalDate.parse("2023-02-28"));
+    QueryRange expected = new QueryRange(LocalDate.parse("2013-05-11"), LocalDate.parse("2023-02-28"));
     assertEquals(expected, queryRange);
   }
 
   @Test
   void testCurrentDate() {
-    List<String> s3ObjectList = Arrays.asList(
+    Set<String> s3ObjectList = new HashSet<>(Arrays.asList(
         "downloads/2012/05/2012-05-10/usgs-info-2012-05-10.json.gz",
         "downloads/2012/05/2012-05-10/id1/event-details-2012-05-10-id1.json.gz",
         "downloads/2012/05/2012-05-10/id2/event-details-2012-05-10-id2.json.gz",
@@ -95,16 +108,21 @@ class QueryRangeDeterminerTest {
         "downloads/2013/05/2013-05-10/id1/event-details-2013-05-10-id4.json.gz",
         "downloads/2013/05/2013-05-10/id2/event-details-2013-05-10-id5.json.gz",
         "downloads/2013/05/2013-05-10/id3/event-details-2013-05-10-id6.json.gz"
-    );
+    ));
     String bucketName = "my-bucket";
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    S3Client s3 = mock(S3Client.class);
-    BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    when(bucketIteratorFactory.create(s3, bucketName, "downloads/")).thenReturn(s3ObjectList.iterator());
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
+      @Override
+      public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
+        String key = invocationOnMock.getArgument(1, String.class);
+        return s3ObjectList.contains(key);
+      }
+    });
     LocalDate now = LocalDate.parse("2013-05-10");
-    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, s3, bucketIteratorFactory, () -> now);
+    QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, () -> now, infoFileS3Actions);
     assertTrue(queryRangeDeterminer.getQueryRange().isEmpty());
   }
 }

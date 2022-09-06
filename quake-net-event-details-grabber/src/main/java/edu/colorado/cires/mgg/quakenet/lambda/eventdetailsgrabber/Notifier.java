@@ -3,44 +3,56 @@ package edu.colorado.cires.mgg.quakenet.lambda.eventdetailsgrabber;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
-import java.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 import software.amazon.awssdk.services.sns.model.SnsException;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 public class Notifier {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Notifier.class);
 
   private final SnsClient snsClient;
+  private final SqsClient sqsClient;
   private final ObjectMapper objectMapper;
-  private final EventDetailsGrabberProperties properties;
 
-  public Notifier(SnsClient snsClient, ObjectMapper objectMapper,
-      EventDetailsGrabberProperties properties) {
+  public Notifier(SnsClient snsClient, SqsClient sqsClient, ObjectMapper objectMapper) {
     this.snsClient = snsClient;
+    this.sqsClient = sqsClient;
     this.objectMapper = objectMapper;
-    this.properties = properties;
   }
 
-  public void notify(String eventId, LocalDate date) {
-    String json;
-    try {
-      EventDetailGrabberMessage message = EventDetailGrabberMessage.Builder.builder().withEventId(eventId).withDate(date.toString()).build();
+  public void retry(String queueUrl, EventDetailGrabberMessage message, int delaySeconds) {
 
-      json = objectMapper.writeValueAsString(message);
+    LOGGER.info("Retrying: {}", message);
+
+    sqsClient.sendMessage(SendMessageRequest.builder()
+        .queueUrl(queueUrl)
+        .messageBody(toJson(message))
+        .delaySeconds(delaySeconds)
+        .build());
+  }
+
+  private String toJson(EventDetailGrabberMessage message) {
+    try {
+      return objectMapper.writeValueAsString(message);
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Unable to serialize message", e);
     }
+  }
 
-    LOGGER.info("Notifying Report Generator: {}-{}", date, eventId);
+  public void notify(String topicArn, EventDetailGrabberMessage message) {
+
+    LOGGER.info("Notifying Report Generator: {}", message);
+
     try {
       PublishRequest request = PublishRequest.builder()
-          .message(json)
-          .topicArn(properties.getTopicArn())
+          .message(toJson(message))
+          .topicArn(topicArn)
           .build();
 
       PublishResponse result = snsClient.publish(request);

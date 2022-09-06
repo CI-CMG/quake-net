@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +38,8 @@ public class InitiatorLambda implements RequestStreamHandler {
     properties.setDefaultStartDate(defaultStartDate);
     properties.setTopicArn(topicArn);
     properties.setMaxDatesPerTrigger(maxDatesPerTrigger);
-    processor = new EventGrabberProcessor(properties, s3Client, snsClient, objectMapper, s3);
+    InfoFileS3Actions infoFileS3Actions = new InfoFileS3Actions(s3, s3Client, objectMapper);
+    processor = new EventGrabberProcessor(properties, snsClient, objectMapper, s3, infoFileS3Actions);
   }
 
   @Override

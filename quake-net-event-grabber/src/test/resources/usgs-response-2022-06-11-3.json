@@ -1,0 +1,14 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1662487380000,
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2022-06-11T00:00:00Z&endtime=2022-06-11T23:59:59.999Z&includeallorigins=false&includeallmagnitudes=false&orderby=time-asc&limit=200&offset=401",
+    "title": "USGS Earthquakes",
+    "status": 200,
+    "api": "1.13.6",
+    "limit": 200,
+    "offset": 401,
+    "count": 0
+  },
+  "features": []
+}

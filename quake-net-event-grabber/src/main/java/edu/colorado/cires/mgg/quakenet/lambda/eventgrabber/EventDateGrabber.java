@@ -1,5 +1,6 @@
 package edu.colorado.cires.mgg.quakenet.lambda.eventgrabber;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
@@ -17,11 +18,13 @@ public class EventDateGrabber {
   private final EventGrabberProperties properties;
   private final InfoFileS3Actions infoFileSaver;
   private final MessageSender messageSender;
+  private final ObjectMapper objectMapper;
 
-  public EventDateGrabber(EventGrabberProperties properties, InfoFileS3Actions infoFileSaver, MessageSender messageSender) {
+  public EventDateGrabber(EventGrabberProperties properties, InfoFileS3Actions infoFileSaver, MessageSender messageSender, ObjectMapper objectMapper) {
     this.properties = properties;
     this.infoFileSaver = infoFileSaver;
     this.messageSender = messageSender;
+    this.objectMapper = objectMapper;
   }
 
   public void grabDetails(EventGrabberMessage message) {
@@ -29,6 +32,7 @@ public class EventDateGrabber {
         properties,
         message.getStartTime(),
         message.getEndTime(),
+        objectMapper,
         eventIds -> handleEventIds(eventIds, message.getStartTime().atZone(ZoneId.of("UTC")).toLocalDate()));
   }
 

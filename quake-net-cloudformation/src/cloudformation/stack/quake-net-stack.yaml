@@ -48,7 +48,7 @@ Parameters:
   QueueMessageMaxReceiveCount:
     Description: The number of times a message can be received in a queue before sending to the DLQ
     Type: Number
-    Default: 3
+    Default: 2
   EventGrabberLambdaMemorySize:
     Description: The amount of memory for the event grabber lambda
     Type: Number
@@ -78,8 +78,24 @@ Parameters:
     Description: The maximum number of instances of the event details grabber lambda
     Type: Number
     MinValue: 1
-    Default: 50
+    Default: 30
   EventDetailsGrabberLambdaTimeout:
+    Description: The timeout in seconds for the event details grabber lambda
+    Type: Number
+    MinValue: 10
+    MaxValue: 900
+    Default: 480
+  EventDetailsGrabberDlqLambdaMemorySize:
+    Description: The amount of memory for the event details grabber lambda
+    Type: Number
+    MinValue: 256
+    Default: 512
+  EventDetailsGrabberDlqLambdaConcurrency:
+    Description: The maximum number of instances of the event details grabber lambda
+    Type: Number
+    MinValue: 1
+    Default: 1
+  EventDetailsGrabberDlqLambdaTimeout:
     Description: The timeout in seconds for the event details grabber lambda
     Type: Number
     MinValue: 10
@@ -91,10 +107,10 @@ Parameters:
     MinValue: 256
     Default: 1024
   ReportInitiatorLambdaConcurrency:
-    Description: The maximum number of instances of the report initiatorlambda
+    Description: The maximum number of instances of the report initiator lambda
     Type: Number
     MinValue: 1
-    Default: 10
+    Default: 30
   ReportInitiatorLambdaTimeout:
     Description: The timeout in seconds for the report initiator lambda
     Type: Number
@@ -107,7 +123,7 @@ Parameters:
     MinValue: 256
     Default: 1024
   ReportGenerationLambdaConcurrency:
-    Description: The maximum number of instances of the report initiatorlambda
+    Description: The maximum number of instances of the report generator lambda
     Type: Number
     MinValue: 1
     Default: 10
@@ -125,6 +141,11 @@ Parameters:
     Description: The number of date requests for a cron trigger
     Type: Number
     Default: 366
+  RetryDelaySeconds:
+    Description: The number of seconds a message should delay when retrying because of a 429 response
+    Type: Number
+    MinValue: 0
+    Default: 15
 
 
 
@@ -241,6 +262,14 @@ Resources:
           Fn::GetAtt:
             - MessagingStack
             - Outputs.UsgsEventDetailsQueryQueueArn
+        UsgsEventDetailsQueryQueueUrl:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.UsgsEventDetailsQueryQueueUrl
+        UsgsEventDetailsDeadLetterQueueArn:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.UsgsEventDetailsDeadLetterQueueArn
         QuakeNetSourceBucketName:
           Fn::GetAtt:
             - BucketStack
@@ -250,6 +279,10 @@ Resources:
         Version: @project.version@@dashTimestamp@
         LogRetentionInDays: !Ref LogRetentionInDays
         UsgsBaseUrl: !Ref UsgsBaseUrl
+        EventDetailsGrabberDlqLambdaMemorySize: !Ref EventDetailsGrabberDlqLambdaMemorySize
+        EventDetailsGrabberDlqLambdaConcurrency: !Ref EventDetailsGrabberDlqLambdaConcurrency
+        EventDetailsGrabberDlqLambdaTimeout: !Ref EventDetailsGrabberDlqLambdaTimeout
+        RetryDelaySeconds: !Ref RetryDelaySeconds
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-details-grabber-stack.yaml

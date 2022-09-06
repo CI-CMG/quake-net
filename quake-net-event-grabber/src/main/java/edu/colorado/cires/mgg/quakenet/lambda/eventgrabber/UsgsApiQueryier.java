@@ -1,7 +1,9 @@
 package edu.colorado.cires.mgg.quakenet.lambda.eventgrabber;
 
-import edu.colorado.cires.mgg.quakenet.model.QnEvent;
-import java.io.ByteArrayInputStream;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.colorado.cires.mgg.quakenet.geojson.FeatureCollection;
+import edu.colorado.cires.mgg.quakenet.geojson.GeoJson;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -11,8 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -23,7 +24,6 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.util.Timeout;
-import org.quakeml.xmlns.quakeml._1.Quakeml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class UsgsApiQueryier {
   private static String readContent(CloseableHttpResponse response) {
     try {
       HttpEntity entity = response.getEntity();
-      if(entity != null) {
+      if (entity != null) {
         try {
           try (InputStream in = entity.getContent()) {
             return IOUtils.toString(in, StandardCharsets.UTF_8);
@@ -61,7 +61,7 @@ public class UsgsApiQueryier {
   private static String buildUri(String baseUrl, Instant startTime, Instant endTime, int pageSize, int offset) {
     try {
       return new URIBuilder(baseUrl + "/fdsnws/event/1/query")
-          .addParameter("format", "quakeml")
+          .addParameter("format", "geojson") //Important!  GeoJSON must be used or deleted events may be returned
           .addParameter("starttime", startTime.toString())
           .addParameter("endtime", endTime.minusMillis(1).toString())
           .addParameter("includeallorigins", "false")
@@ -82,16 +82,16 @@ public class UsgsApiQueryier {
     }
   }
 
-  private static Quakeml parseQuakeml(String content) {
+  private static FeatureCollection parseGeoJson(String content, ObjectMapper objectMapper) {
     try {
-      return (Quakeml) JAXBContext.newInstance(Quakeml.class).createUnmarshaller()
-          .unmarshal(new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
-    } catch (JAXBException e) {
-      throw new IllegalStateException("Unable to parse QuakeML content", e);
+      return objectMapper.readValue(content, FeatureCollection.class);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Unable to parse json", e);
     }
   }
 
-  public static void query(EventGrabberProperties properties, Instant startTime, Instant endTime, Consumer<List<String>> eventIdConsumer) {
+  public static void query(EventGrabberProperties properties, Instant startTime, Instant endTime, ObjectMapper objectMapper,
+      Consumer<List<String>> eventIdConsumer) {
     final int pageSize = properties.getPageSize();
 
     int resultCount = -1;
@@ -113,9 +113,9 @@ public class UsgsApiQueryier {
           int responseCode = response.getCode();
           String content = readContent(response);
           if (responseCode == 200) {
-            Quakeml quakeml = parseQuakeml(content);
-            eventIds = DataParser.parseEventIds(quakeml);
-            if(eventIds.isEmpty()) {
+            FeatureCollection featureCollection = parseGeoJson(content, objectMapper);
+            eventIds = featureCollection.getFeatures().stream().map(GeoJson::getId).collect(Collectors.toList());
+            if (eventIds.isEmpty()) {
               LOGGER.info("No More Results: {} : {} : {}", uri);
               break;
             }

@@ -12,6 +12,7 @@ import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.s3.util.BucketIterator;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.S3FileUtilities;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,11 +40,12 @@ public class ReportInitiatorLambda implements RequestHandler<SQSEvent, SQSBatchR
     properties.setTopicArn(topicArn);
     MessageSender messageSender = new MessageSender(snsClient, objectMapper);
     InfoFileS3Actions infoFileS3Actions = new InfoFileS3Actions(s3, s3Client, objectMapper);
+    S3FileUtilities s3FileUtilities = new S3FileUtilities(s3, s3Client);
     reportTrigger = new ReportTrigger(
         properties,
         messageSender,
         (bucketName, prefix) -> new BucketIterator(s3Client, bucketName, prefix),
-        infoFileS3Actions);
+        infoFileS3Actions, s3FileUtilities);
   }
 
 

@@ -8,10 +8,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 class EventDateGrabberTest {
 
+  private final ObjectMapper objectMapper = ObjectMapperCreator.create();
   private MockWebServer mockWebServer;
   private HttpUrl baseUrl;
 
@@ -47,9 +50,9 @@ class EventDateGrabberTest {
 
   @Test
   void test() throws Exception {
-    mockWebServer.enqueue(new MockResponse().setBody(IOUtils.resourceToString("/usgs-response-2022-06-11-1.xml", StandardCharsets.UTF_8)));
-    mockWebServer.enqueue(new MockResponse().setBody(IOUtils.resourceToString("/usgs-response-2022-06-11-2.xml", StandardCharsets.UTF_8)));
-    mockWebServer.enqueue(new MockResponse().setResponseCode(204));
+    mockWebServer.enqueue(new MockResponse().setBody(IOUtils.resourceToString("/usgs-response-2022-06-11-1.json", StandardCharsets.UTF_8)));
+    mockWebServer.enqueue(new MockResponse().setBody(IOUtils.resourceToString("/usgs-response-2022-06-11-2.json", StandardCharsets.UTF_8)));
+    mockWebServer.enqueue(new MockResponse().setBody(IOUtils.resourceToString("/usgs-response-2022-06-11-3.json", StandardCharsets.UTF_8)));
 
     String topicArn = "topicArn";
     String bucketName = "my-bucket";
@@ -69,7 +72,7 @@ class EventDateGrabberTest {
 
     when(infoFileSaver.readInfoFile(eq(bucketName), eq("downloads/2022/06/2022-06-11/usgs-info-2022-06-11.json.gz"))).thenReturn(Optional.of(infoFile));
 
-    EventDateGrabber eventDateGrabber = new EventDateGrabber(properties, infoFileSaver, messageSender);
+    EventDateGrabber eventDateGrabber = new EventDateGrabber(properties, infoFileSaver, messageSender, objectMapper);
 
     EventGrabberMessage message = EventGrabberMessage.Builder.builder()
         .withStartTime(LocalDate.parse("2022-06-11").atStartOfDay(ZoneId.of("UTC")).toInstant())
@@ -81,19 +84,19 @@ class EventDateGrabberTest {
     RecordedRequest request1 = mockWebServer.takeRequest();
     assertEquals("/fdsnws/event/1/query", request1.getRequestUrl().encodedPath());
     assertEquals(
-        "format=quakeml&starttime=2022-06-11T00%3A00%3A00Z&endtime=2022-06-11T23%3A59%3A59.999Z&includeallorigins=false&includeallmagnitudes=false&orderby=time-asc&limit=200&offset=1",
+        "format=geojson&starttime=2022-06-11T00%3A00%3A00Z&endtime=2022-06-11T23%3A59%3A59.999Z&includeallorigins=false&includeallmagnitudes=false&orderby=time-asc&limit=200&offset=1",
         request1.getRequestUrl().encodedQuery());
 
     RecordedRequest request2 = mockWebServer.takeRequest();
     assertEquals("/fdsnws/event/1/query", request2.getRequestUrl().encodedPath());
     assertEquals(
-        "format=quakeml&starttime=2022-06-11T00%3A00%3A00Z&endtime=2022-06-11T23%3A59%3A59.999Z&includeallorigins=false&includeallmagnitudes=false&orderby=time-asc&limit=200&offset=201",
+        "format=geojson&starttime=2022-06-11T00%3A00%3A00Z&endtime=2022-06-11T23%3A59%3A59.999Z&includeallorigins=false&includeallmagnitudes=false&orderby=time-asc&limit=200&offset=201",
         request2.getRequestUrl().encodedQuery());
 
     RecordedRequest request3 = mockWebServer.takeRequest();
     assertEquals("/fdsnws/event/1/query", request3.getRequestUrl().encodedPath());
     assertEquals(
-        "format=quakeml&starttime=2022-06-11T00%3A00%3A00Z&endtime=2022-06-11T23%3A59%3A59.999Z&includeallorigins=false&includeallmagnitudes=false&orderby=time-asc&limit=200&offset=401",
+        "format=geojson&starttime=2022-06-11T00%3A00%3A00Z&endtime=2022-06-11T23%3A59%3A59.999Z&includeallorigins=false&includeallmagnitudes=false&orderby=time-asc&limit=200&offset=401",
         request3.getRequestUrl().encodedQuery());
 
 

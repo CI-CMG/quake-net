@@ -21,16 +21,19 @@ public class BucketIterator implements Iterator<String> {
         .bucket(bucketName)
         .prefix(prefix)
         .build();
-    listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
-    contents = new LinkedList<>(listObjectsResponse.contents());
   }
 
   @Override
   public boolean hasNext() {
-    while (contents.isEmpty() && listObjectsResponse.nextContinuationToken() != null) {
-      listObjectsRequest = listObjectsRequest.toBuilder().continuationToken(listObjectsResponse.nextContinuationToken()).build();
-      listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
-      contents = new LinkedList<>(listObjectsResponse.contents());
+    while (contents == null || (contents.isEmpty() && listObjectsResponse.nextContinuationToken() != null)) {
+      if(listObjectsResponse == null) {
+        listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
+        contents = new LinkedList<>(listObjectsResponse.contents());
+      } else {
+        listObjectsRequest = listObjectsRequest.toBuilder().continuationToken(listObjectsResponse.nextContinuationToken()).build();
+        listObjectsResponse = s3.listObjectsV2(listObjectsRequest);
+        contents = new LinkedList<>(listObjectsResponse.contents());
+      }
     }
     return !contents.isEmpty();
   }

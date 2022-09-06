@@ -18,9 +18,23 @@ Parameters:
     Description: The maximum number of instances to create when processing queues
     Type: Number
     MinValue: 1
+  EventDetailsGrabberDlqLambdaMemorySize:
+    Description: The amount of memory for the event detail grabber DLQ lambda
+    Type: Number
+  EventDetailsGrabberDlqLambdaTimeout:
+    Description: The timeout in seconds for the event detail grabber DLQ lambda
+    Type: Number
+  EventDetailsGrabberDlqLambdaConcurrency:
+    Description: The maximum number of instances to create when processing DLQ
+    Type: Number
+    MinValue: 1
   UsgsEventDetailsQueryCompleteTopicArn:
     Type: String
   UsgsEventDetailsQueryQueueArn:
+    Type: String
+  UsgsEventDetailsQueryQueueUrl:
+    Type: String
+  UsgsEventDetailsDeadLetterQueueArn:
     Type: String
   QuakeNetSourceBucketName:
     Type: String
@@ -41,6 +55,10 @@ Parameters:
   UsgsBaseUrl:
     Description: The base url for the earthquake API
     Type: String
+  RetryDelaySeconds:
+    Description: The number of seconds a message should delay when retrying because of a 429 response
+    Type: Number
+    MinValue: 0
 
 
 Conditions:
@@ -90,6 +108,7 @@ Resources:
                   - sqs:DeleteMessage
                   - sqs:GetQueueAttributes
                   - sqs:ChangeMessageVisibility
+                  - sqs:SendMessage
         - PolicyName: SNS
           PolicyDocument:
             Version: 2012-10-17
@@ -98,6 +117,61 @@ Resources:
                 Resource: !Ref UsgsEventDetailsQueryCompleteTopicArn
                 Action:
                   - sns:Publish
+        - PolicyName: S3
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:s3:::${QuakeNetSourceBucketName}/*
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:s3:::${QuakeNetSourceBucketName}
+                Action:
+                  - s3:ListBucket
+
+
+  EventDetailsGrabberDlqLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary:
+        Fn::If:
+          - HasRolePermissionsBoundary
+          - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+          - !Ref AWS::NoValue
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Logging
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+        - PolicyName: SQS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Ref UsgsEventDetailsDeadLetterQueueArn
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ChangeMessageVisibility
         - PolicyName: S3
           PolicyDocument:
             Version: 2012-10-17
@@ -135,6 +209,8 @@ Resources:
           TOPIC_ARN: !Ref UsgsEventDetailsQueryCompleteTopicArn
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
           BASE_URL: !Ref UsgsBaseUrl
+          RETRY_QUEUE_URL: !Ref UsgsEventDetailsQueryQueueUrl
+          RETRY_DELAY_SECONDS: !Ref RetryDelaySeconds
 
   EventDetailsGrabberLogGroup:
     Type: AWS::Logs::LogGroup
@@ -149,3 +225,36 @@ Resources:
       Enabled: true
       EventSourceArn: !Ref UsgsEventDetailsQueryQueueArn
       FunctionName: !GetAtt EventDetailsGrabberLambda.Arn
+
+
+  EventDetailsGrabberDlqLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Handles errors when grabbing USGS event details
+      Code:
+        S3Bucket: !Ref DeploymentBucketName
+        S3Key: !Sub lambda/quake-net-event-details-grabber-${Version}-lambda.zip
+      Handler: edu.colorado.cires.mgg.quakenet.lambda.eventdetailsgrabber.EventDetailsGrabberDlqLambda::handleRequest
+      Runtime: java11
+      MemorySize: !Ref EventDetailsGrabberDlqLambdaMemorySize
+      Timeout: !Ref EventDetailsGrabberDlqLambdaTimeout
+      ReservedConcurrentExecutions: !Ref EventDetailsGrabberDlqLambdaConcurrency
+      Role: !GetAtt EventDetailsGrabberDlqLambdaRole.Arn
+      Environment:
+        Variables:
+          TOPIC_ARN: !Ref UsgsEventDetailsQueryCompleteTopicArn
+          DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
+
+  EventDetailsGrabberDlqLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${EventDetailsGrabberDlqLambda}
+      RetentionInDays: !Ref LogRetentionInDays
+
+  EventDetailsGrabberLambdaDlqQueueTrigger:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      Enabled: true
+      EventSourceArn: !Ref UsgsEventDetailsDeadLetterQueueArn
+      FunctionName: !GetAtt EventDetailsGrabberDlqLambda.Arn

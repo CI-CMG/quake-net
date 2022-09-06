@@ -84,12 +84,11 @@ public class UsgsApiQueryier {
     }
   }
 
-
   private String queryDetails(
       EventDetailGrabberMessage message,
       String uri,
       BiFunction<String, String, String> fileNameSupplier
-  ) {
+  ) throws TooManyRequestsException {
 
     LOGGER.info("Request: {}", uri);
 
@@ -116,7 +115,10 @@ public class UsgsApiQueryier {
         } else if (responseCode == 204) {
           LOGGER.error("No Content: {} : {} : {}", uri, responseCode, response.getReasonPhrase());
           throw new IllegalStateException("No Content: " + uri);
-        } else {
+        } else if (responseCode == 429) {
+          LOGGER.error("Too many requests. Will try again later: {} : {} : {} : {}", uri, responseCode, response.getReasonPhrase(), content);
+          throw new TooManyRequestsException(String.format("Too many requests. Will try again later: %s : %d : %s : %s", uri, responseCode, response.getReasonPhrase(), content), message);
+        }else {
           LOGGER.error("Unexpected Response: {} : {} : {} : {}", uri, responseCode, response.getReasonPhrase(), content);
           throw new IllegalStateException("Unexpected Response: " + uri);
         }
@@ -130,14 +132,14 @@ public class UsgsApiQueryier {
   }
 
 
-  public String queryDetailsQuakeMl(EventDetailGrabberMessage message) {
+  public String queryDetailsQuakeMl(EventDetailGrabberMessage message) throws TooManyRequestsException {
     return queryDetails(
         message,
         buildUri(message.getEventId(), "quakeml"),
         (date, eventId) -> "event-details-" + date + "-" + eventId + ".xml.gz");
   }
 
-  public String queryDetailsJson(EventDetailGrabberMessage message) {
+  public String queryDetailsJson(EventDetailGrabberMessage message) throws TooManyRequestsException {
     return queryDetails(
         message,
         buildUri(message.getEventId(), "geojson"),
@@ -158,7 +160,7 @@ public class UsgsApiQueryier {
   public String queryCdi(
       EventDetailGrabberMessage message,
       String uri
-  ) {
+  ) throws TooManyRequestsException {
     return queryDetails(
         message,
         uri,

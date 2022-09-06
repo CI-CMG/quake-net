@@ -8,6 +8,24 @@ public class EventDetailsGrabberProperties {
   private String bucketName;
   private String topicArn;
   private String baseUrl;
+  private String retryQueueUrl;
+  private int retryDelaySeconds;
+
+  public int getRetryDelaySeconds() {
+    return retryDelaySeconds;
+  }
+
+  public void setRetryDelaySeconds(int retryDelaySeconds) {
+    this.retryDelaySeconds = retryDelaySeconds;
+  }
+
+  public String getRetryQueueUrl() {
+    return retryQueueUrl;
+  }
+
+  public void setRetryQueueUrl(String retryQueueUrl) {
+    this.retryQueueUrl = retryQueueUrl;
+  }
 
   public String getBaseUrl() {
     return baseUrl;
