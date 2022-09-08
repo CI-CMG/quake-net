@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: QuakeNet event detail grabbing stack
 
 Parameters:
+  StackPrefix:
+    Type: String
   DeploymentBucketName:
     Description: The deployment bucket
     Type: String
@@ -33,6 +35,8 @@ Parameters:
   UsgsEventDetailsQueryQueueArn:
     Type: String
   UsgsEventDetailsQueryQueueUrl:
+    Type: String
+  UsgsEventDetailsDeadLetterQueueUrl:
     Type: String
   UsgsEventDetailsDeadLetterQueueArn:
     Type: String
@@ -72,6 +76,11 @@ Resources:
   EventDetailsGrabberLambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       PermissionsBoundary:
         Fn::If:
           - HasRolePermissionsBoundary
@@ -109,6 +118,10 @@ Resources:
                   - sqs:GetQueueAttributes
                   - sqs:ChangeMessageVisibility
                   - sqs:SendMessage
+              - Effect: Allow
+                Resource: !Ref UsgsEventDetailsDeadLetterQueueArn
+                Action:
+                  - sqs:SendMessage
         - PolicyName: SNS
           PolicyDocument:
             Version: 2012-10-17
@@ -136,6 +149,11 @@ Resources:
   EventDetailsGrabberDlqLambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       PermissionsBoundary:
         Fn::If:
           - HasRolePermissionsBoundary
@@ -192,6 +210,11 @@ Resources:
   EventDetailsGrabberLambda:
     Type: AWS::Lambda::Function
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       Description: Queries USGS for earthquake event details by ID
       Code:
         S3Bucket: !Ref DeploymentBucketName
@@ -211,6 +234,7 @@ Resources:
           BASE_URL: !Ref UsgsBaseUrl
           RETRY_QUEUE_URL: !Ref UsgsEventDetailsQueryQueueUrl
           RETRY_DELAY_SECONDS: !Ref RetryDelaySeconds
+          ABORT_QUEUE_URL: !Ref UsgsEventDetailsDeadLetterQueueUrl
 
   EventDetailsGrabberLogGroup:
     Type: AWS::Logs::LogGroup
@@ -230,6 +254,11 @@ Resources:
   EventDetailsGrabberDlqLambda:
     Type: AWS::Lambda::Function
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       Description: Handles errors when grabbing USGS event details
       Code:
         S3Bucket: !Ref DeploymentBucketName

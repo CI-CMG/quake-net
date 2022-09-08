@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: QuakeNet event grabbing stack
 
 Parameters:
+  StackPrefix:
+    Type: String
   DeploymentBucketName:
     Description: The deployment bucket
     Type: String
@@ -44,6 +46,9 @@ Parameters:
     Type: Number
     MinValue: 0
     Default: 30
+  MinimumMagnitude:
+    Description: Only return results with this magnitude or greater
+    Type: Number
 
 
 Conditions:
@@ -57,6 +62,11 @@ Resources:
   EventGrabberLambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       PermissionsBoundary:
         Fn::If:
           - HasRolePermissionsBoundary
@@ -121,6 +131,11 @@ Resources:
   EventGrabberLambda:
     Type: AWS::Lambda::Function
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       Description: Queries USGS for earthquake event IDs by date
       Code:
         S3Bucket: !Ref DeploymentBucketName
@@ -139,6 +154,7 @@ Resources:
           PAGE_SIZE: !Ref EventGrabberLambdaPageSize
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
           BASE_URL: !Ref UsgsBaseUrl
+          MIN_MAGNITUDE: !Ref MinimumMagnitude
 
   EventGrabberLambdaLogGroup:
     Type: AWS::Logs::LogGroup

@@ -9,7 +9,16 @@ public class EventDetailsGrabberProperties {
   private String topicArn;
   private String baseUrl;
   private String retryQueueUrl;
+  private String abortQueueUrl;
   private int retryDelaySeconds;
+
+  public String getAbortQueueUrl() {
+    return abortQueueUrl;
+  }
+
+  public void setAbortQueueUrl(String abortQueueUrl) {
+    this.abortQueueUrl = abortQueueUrl;
+  }
 
   public int getRetryDelaySeconds() {
     return retryDelaySeconds;

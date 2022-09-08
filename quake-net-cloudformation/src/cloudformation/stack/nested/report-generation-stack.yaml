@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: QuakeNet report generation stack
 
 Parameters:
+  StackPrefix:
+    Type: String
   DeploymentBucketName:
     Description: The deployment bucket
     Type: String
@@ -43,6 +45,11 @@ Resources:
   ReportGenerationLambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       PermissionsBoundary:
         Fn::If:
           - HasRolePermissionsBoundary
@@ -99,10 +106,15 @@ Resources:
   ReportGenerationLambda:
     Type: AWS::Lambda::Function
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       Description: Generates a PDF report for a given month
       Code:
         S3Bucket: !Ref DeploymentBucketName
-        S3Key: !Sub lambda/quake-net-report-initiator-${Version}-lambda.zip
+        S3Key: !Sub lambda/quake-net-pdf-generator-${Version}-lambda.zip
       Handler: edu.colorado.cires.mgg.quakenet.lambda.pdfgen.PdfGenLambda::handleRequest
       Runtime: java11
       MemorySize: !Ref ReportGenerationLambdaMemorySize

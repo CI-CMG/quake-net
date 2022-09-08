@@ -4,11 +4,14 @@ import java.util.Objects;
 
 public class KeySet implements Comparable<KeySet>{
 
-  private final String detailsKey;
-  private final String cdiKey;
+  private String detailsKey;
+  private String cdiKey;
 
-  public KeySet(String detailsKey, String cdiKey) {
+  public void setDetailsKey(String detailsKey) {
     this.detailsKey = detailsKey;
+  }
+
+  public void setCdiKey(String cdiKey) {
     this.cdiKey = cdiKey;
   }
 

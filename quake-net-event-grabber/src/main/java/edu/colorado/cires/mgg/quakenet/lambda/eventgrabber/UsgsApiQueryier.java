@@ -58,7 +58,7 @@ public class UsgsApiQueryier {
 
   }
 
-  private static String buildUri(String baseUrl, Instant startTime, Instant endTime, int pageSize, int offset) {
+  private static String buildUri(String baseUrl, Instant startTime, Instant endTime, int pageSize, int offset, String minimumMagnitude) {
     try {
       return new URIBuilder(baseUrl + "/fdsnws/event/1/query")
           .addParameter("format", "geojson") //Important!  GeoJSON must be used or deleted events may be returned
@@ -66,6 +66,7 @@ public class UsgsApiQueryier {
           .addParameter("endtime", endTime.minusMillis(1).toString())
           .addParameter("includeallorigins", "false")
           .addParameter("includeallmagnitudes", "false")
+          .addParameter("minmagnitude", minimumMagnitude)
           .addParameter("orderby", "time-asc")
           .addParameter("limit", Integer.toString(pageSize))
           .addParameter("offset", Integer.toString(offset)).build().toString();
@@ -101,7 +102,7 @@ public class UsgsApiQueryier {
 
       int offset = page * pageSize + 1;
       page++;
-      String uri = buildUri(properties.getBaseUrl(), startTime, endTime, pageSize, offset);
+      String uri = buildUri(properties.getBaseUrl(), startTime, endTime, pageSize, offset, properties.getMinimumMagnitude());
       LOGGER.info("Request: {}", uri);
 
       List<String> eventIds;

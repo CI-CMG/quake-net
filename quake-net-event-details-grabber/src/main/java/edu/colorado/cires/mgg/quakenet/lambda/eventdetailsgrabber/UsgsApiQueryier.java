@@ -117,8 +117,14 @@ public class UsgsApiQueryier {
           throw new IllegalStateException("No Content: " + uri);
         } else if (responseCode == 429) {
           LOGGER.error("Too many requests. Will try again later: {} : {} : {} : {}", uri, responseCode, response.getReasonPhrase(), content);
-          throw new TooManyRequestsException(String.format("Too many requests. Will try again later: %s : %d : %s : %s", uri, responseCode, response.getReasonPhrase(), content), message);
-        }else {
+          throw new TooManyRequestsException(
+              String.format("Too many requests. Will try again later: %s : %d : %s : %s", uri, responseCode, response.getReasonPhrase(), content),
+              message);
+        } else if (responseCode == 409) {
+          String error = String.format("Conflict. The event was deleted: %s : %d : %s : %s", uri, responseCode, response.getReasonPhrase(), content);
+          LOGGER.error(error);
+          throw new ApiAbortException(error, EventDetailGrabberMessage.Builder.builder(message).withError(error).build());
+        } else {
           LOGGER.error("Unexpected Response: {} : {} : {} : {}", uri, responseCode, response.getReasonPhrase(), content);
           throw new IllegalStateException("Unexpected Response: " + uri);
         }

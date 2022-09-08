@@ -8,9 +8,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,7 +53,7 @@ public class DataParser {
   }
 
   public List<KeySet> getRequiredKeys(int year, int month) {
-    List<KeySet> results = new ArrayList<>();
+    LinkedHashMap<String, KeySet> results = new LinkedHashMap<>();
 
     if (!isReportExists(year, month)) {
 
@@ -65,22 +65,28 @@ public class DataParser {
           LocalDate date = LocalDate.parse(parts[3]);
           String eventId = parts[4];
           String file = parts[5];
-          if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))) {
-            results.add(new KeySet(
-                key,
-                key.replace("/" + file, String.format("/event-cdi-%s-%s.xml.gz", date, eventId))
-            ));
+          if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId)) || file.equals(
+              String.format("event-cdi-%s-%s.xml.gz", date, eventId))) {
+            String k = key.replace("/" + file, String.format("/event-cdi-%s-%s.xml.gz", date, eventId));
+            KeySet keySet = results.get(k);
+            if (keySet == null) {
+              keySet = new KeySet();
+              results.put(k, keySet);
+            }
+            if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))) {
+              keySet.setDetailsKey(key);
+            } else {
+              keySet.setCdiKey(key);
+            }
           }
 
         }
       }
-
-      Collections.sort(results);
     } else {
       LOGGER.info("Report already existed: {}-{}", year, month);
     }
 
-    return results;
+    return new ArrayList<>(results.values());
   }
 
   public static void enrichCdi(QnEvent event, Cdidata cdidata) {

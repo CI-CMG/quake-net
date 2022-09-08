@@ -13,11 +13,13 @@ public class EventDetailGrabberMessage {
 
   private final String eventId;
   private final String date;
+  private final String error;
   private final Map<String, Object> otherFields;
 
-  private EventDetailGrabberMessage(String eventId, String date, Map<String, Object> otherFields) {
+  private EventDetailGrabberMessage(String eventId, String date, String error, Map<String, Object> otherFields) {
     this.eventId = eventId;
     this.date = date;
+    this.error = error;
     this.otherFields = otherFields;
   }
 
@@ -27,6 +29,10 @@ public class EventDetailGrabberMessage {
 
   public String getDate() {
     return date;
+  }
+
+  public String getError() {
+    return error;
   }
 
   @JsonAnyGetter
@@ -43,13 +49,13 @@ public class EventDetailGrabberMessage {
       return false;
     }
     EventDetailGrabberMessage message = (EventDetailGrabberMessage) o;
-    return Objects.equals(eventId, message.eventId) && Objects.equals(date, message.date) && Objects.equals(otherFields,
-        message.otherFields);
+    return Objects.equals(eventId, message.eventId) && Objects.equals(date, message.date) && Objects.equals(error,
+        message.error) && Objects.equals(otherFields, message.otherFields);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(eventId, date, otherFields);
+    return Objects.hash(eventId, date, error, otherFields);
   }
 
   @Override
@@ -57,6 +63,7 @@ public class EventDetailGrabberMessage {
     return "EventDetailGrabberMessage{" +
         "eventId='" + eventId + '\'' +
         ", date='" + date + '\'' +
+        ", error='" + error + '\'' +
         ", otherFields=" + otherFields +
         '}';
   }
@@ -73,6 +80,7 @@ public class EventDetailGrabberMessage {
 
     private String eventId;
     private String date;
+    private String error;
     private Map<String, Object> otherFields = new HashMap<>();
 
     private Builder() {
@@ -83,6 +91,7 @@ public class EventDetailGrabberMessage {
       if (message != null) {
         eventId = message.eventId;
         date = message.date;
+        error = message.error;
         otherFields = message.otherFields;
       }
     }
@@ -95,6 +104,11 @@ public class EventDetailGrabberMessage {
 
     public Builder withDate(String date) {
       this.date = date;
+      return this;
+    }
+
+    public Builder withError(String error) {
+      this.error = error;
       return this;
     }
 
@@ -114,7 +128,7 @@ public class EventDetailGrabberMessage {
     }
 
     public EventDetailGrabberMessage build() {
-      return new EventDetailGrabberMessage(eventId, date, otherFields);
+      return new EventDetailGrabberMessage(eventId, date, error, otherFields);
     }
   }
 }

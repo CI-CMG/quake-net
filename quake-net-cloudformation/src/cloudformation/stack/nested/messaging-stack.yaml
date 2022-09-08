@@ -16,26 +16,51 @@ Resources:
   InitiatorCompleteTopic:
     Type: AWS::SNS::Topic
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-initiator
 
   UsgsDateQueryCompleteTopic:
     Type: AWS::SNS::Topic
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-date-query
 
   UsgsEventDetailsQueryCompleteTopic:
     Type: AWS::SNS::Topic
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-detail-query
 
   ReportInitiatorCompleteTopic:
     Type: AWS::SNS::Topic
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       TopicName: !Sub ${StackPrefix}-${AWS::AccountId}-report-initiator
 
   DeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-dlq
       #14 days
       MessageRetentionPeriod: 1209600
@@ -43,6 +68,11 @@ Resources:
   UsgsEventDetailsDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-details-dlq
       #14 days
@@ -51,6 +81,11 @@ Resources:
   UsgsDateQueryQueue:
     Type: AWS::SQS::Queue
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-date-query
         #14 days
@@ -62,6 +97,11 @@ Resources:
   UsgsEventDetailsQueryQueue:
     Type: AWS::SQS::Queue
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-usgs-event-details-query
       #14 days
@@ -73,6 +113,11 @@ Resources:
   ReportInitiatorQueue:
     Type: AWS::SQS::Queue
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-report-initiatior
       #14 days
@@ -84,6 +129,11 @@ Resources:
   ReportGenerationQueue:
     Type: AWS::SQS::Queue
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       VisibilityTimeout: !Ref VisibilityTimeoutSeconds
       QueueName: !Sub ${StackPrefix}-${AWS::AccountId}-report-generation
       #14 days

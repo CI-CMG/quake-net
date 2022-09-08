@@ -29,6 +29,7 @@ public class EventGrabberLambda implements RequestHandler<SQSEvent, SQSBatchResp
   private static final String topicArn = System.getenv("TOPIC_ARN");
   private static final String downloadBucket = System.getenv("DOWNLOAD_BUCKET");
   private static final String baseUrl = System.getenv("BASE_URL");
+  private static final String minMagnitude = System.getenv("MIN_MAGNITUDE");
   private static final SnsClient snsClient = SnsClient.builder().build();
   private static final ObjectMapper objectMapper = ObjectMapperCreator.create();
   private static final S3Client s3Client = S3Client.builder().build();
@@ -43,6 +44,7 @@ public class EventGrabberLambda implements RequestHandler<SQSEvent, SQSBatchResp
     properties.setPageSize(pageSize);
     properties.setTopicArn(topicArn);
     properties.setBucketName(downloadBucket);
+    properties.setMinimumMagnitude(minMagnitude);
     properties.setBaseUrl(baseUrl);//https://earthquake.usgs.gov
     InfoFileS3Actions infoFileSaver = new InfoFileS3Actions(s3, s3Client, objectMapper);
     MessageSender messageSender = new MessageSender(snsClient, objectMapper);

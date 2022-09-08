@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: QuakeNet Cron Trigger Resources
 
 Parameters:
+  StackPrefix:
+    Type: String
   DeploymentBucketName:
     Description: The deployment bucket
     Type: String
@@ -49,6 +51,11 @@ Resources:
   InitiatorLambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       PermissionsBoundary:
         Fn::If:
           - HasRolePermissionsBoundary
@@ -101,6 +108,11 @@ Resources:
   InitiatorLambda:
     Type: AWS::Lambda::Function
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       Description: Determines dates to query for USGS earthquake events
       Code:
         S3Bucket: !Ref DeploymentBucketName

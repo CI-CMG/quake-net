@@ -8,6 +8,15 @@ public class EventGrabberProperties {
   private String topicArn;
   private String bucketName;
   private String baseUrl;
+  private String minimumMagnitude;
+
+  public String getMinimumMagnitude() {
+    return minimumMagnitude;
+  }
+
+  public void setMinimumMagnitude(String minimumMagnitude) {
+    this.minimumMagnitude = minimumMagnitude;
+  }
 
   public int getPageSize() {
     return pageSize;

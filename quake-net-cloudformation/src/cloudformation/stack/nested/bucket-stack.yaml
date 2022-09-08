@@ -35,6 +35,11 @@ Resources:
   BucketDrainLambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       PermissionsBoundary:
         Fn::If:
           - HasPermissionsBoundary
@@ -84,6 +89,11 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Description: Empty Bucket
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       Code:
         S3Bucket: !Ref DeploymentBucketName
         S3Key: !Sub lambda/quake-net-custom-resource-${Version}-lambda.zip
@@ -106,6 +116,11 @@ Resources:
     Condition: IsProduction
     DeletionPolicy: Retain
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       BucketName:
         Fn::Sub:
           - ${StackPrefix}-${AWS::AccountId}-${Suffix}
@@ -116,6 +131,11 @@ Resources:
     Condition: IsDev
     DeletionPolicy: Delete
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       BucketName:
         Fn::Sub:
           - ${StackPrefix}-${AWS::AccountId}-${Suffix}

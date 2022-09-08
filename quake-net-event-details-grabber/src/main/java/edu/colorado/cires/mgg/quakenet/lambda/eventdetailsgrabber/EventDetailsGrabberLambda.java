@@ -29,6 +29,7 @@ public class EventDetailsGrabberLambda implements RequestHandler<SQSEvent, SQSBa
   private static final String topicArn = System.getenv("TOPIC_ARN");
   private static final String baseUrl = System.getenv("BASE_URL");
   private static final String retryQueueUrl = System.getenv("RETRY_QUEUE_URL");
+  private static final String abortQueueUrl = System.getenv("ABORT_QUEUE_URL");
   private static final int retryDelaySeconds = Integer.parseInt(System.getenv("RETRY_DELAY_SECONDS"));
   private static final SnsClient snsClient = SnsClient.builder().build();
   private static final SqsClient sqsClient = SqsClient.builder().build();
@@ -49,6 +50,7 @@ public class EventDetailsGrabberLambda implements RequestHandler<SQSEvent, SQSBa
     properties.setBaseUrl(baseUrl);
     properties.setRetryQueueUrl(retryQueueUrl);
     properties.setRetryDelaySeconds(retryDelaySeconds);
+    properties.setAbortQueueUrl(abortQueueUrl);
     notifier = new Notifier(snsClient, sqsClient, objectMapper);
     s3Doer = new S3Doer(s3);
     usgsApiQueryier = new UsgsApiQueryier(s3Doer, properties, objectMapper);

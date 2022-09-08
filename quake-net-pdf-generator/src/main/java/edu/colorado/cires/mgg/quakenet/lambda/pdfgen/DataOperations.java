@@ -6,10 +6,13 @@ import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import edu.colorado.cires.mgg.quakenet.s3.util.S3FileUtilities;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import org.apache.commons.io.IOUtils;
 import org.quakeml.xmlns.quakeml._1.Quakeml;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -27,10 +30,17 @@ public class DataOperations {
   }
 
   public void writePdf(String bucketName, String key, List<QnEvent> events, ReportGenerateMessage message) {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    try {
+      PdfWriter.writePdf(events, message, bos);
+    } catch (DocumentException e) {
+      throw new IllegalStateException("An error occurred writing report", e);
+    }
+
     fileUploader.saveUncompressedFile(bucketName, key, outputStream -> {
       try {
-        PdfWriter.writePdf(events, message, outputStream);
-      } catch (DocumentException e) {
+        IOUtils.write(bos.toByteArray(), outputStream);
+      } catch (IOException e) {
         throw new IllegalStateException("An error occurred writing report", e);
       }
     });

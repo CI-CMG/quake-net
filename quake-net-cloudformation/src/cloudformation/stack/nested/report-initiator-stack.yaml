@@ -2,6 +2,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: QuakeNet report initiating stack
 
 Parameters:
+  StackPrefix:
+    Type: String
   DeploymentBucketName:
     Description: The deployment bucket
     Type: String
@@ -45,6 +47,11 @@ Resources:
   ReportInitiatorLambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       PermissionsBoundary:
         Fn::If:
           - HasRolePermissionsBoundary
@@ -109,6 +116,11 @@ Resources:
   ReportInitiatorLambda:
     Type: AWS::Lambda::Function
     Properties:
+      Tags:
+        - Key: Application
+          Value: QuakeNet
+        - Key: StackPrefix
+          Value: !Ref StackPrefix
       Description: Checks to see if all USGS data was retrieved for a given month to generate a report
       Code:
         S3Bucket: !Ref DeploymentBucketName

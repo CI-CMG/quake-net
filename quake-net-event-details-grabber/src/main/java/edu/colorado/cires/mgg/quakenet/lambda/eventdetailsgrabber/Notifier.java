@@ -37,6 +37,16 @@ public class Notifier {
         .build());
   }
 
+  public void abort(String queueUrl, EventDetailGrabberMessage message) {
+
+    LOGGER.info("Aborting: {}", message);
+
+    sqsClient.sendMessage(SendMessageRequest.builder()
+        .queueUrl(queueUrl)
+        .messageBody(toJson(message))
+        .build());
+  }
+
   private String toJson(EventDetailGrabberMessage message) {
     try {
       return objectMapper.writeValueAsString(message);

@@ -25,6 +25,8 @@ public class EventDetailsGrabberExecutor {
       notifier.notify(properties.getTopicArn(), message);
     } catch (TooManyRequestsException e) {
       notifier.retry(properties.getRetryQueueUrl(), message, properties.getRetryDelaySeconds());
+    } catch (ApiAbortException e) {
+      notifier.abort(properties.getAbortQueueUrl(), e.getEventMessage());
     }
   }
 }

@@ -107,12 +107,6 @@ class EventDetailsGrabberExecutorTest {
 
   @Test
   void testTooMany() throws Exception {
-    String json = IOUtils.resourceToString("/usgs-us7000fxq2.json", StandardCharsets.UTF_8)
-        .replaceAll("\\Qhttps://earthquake.usgs.gov/\\E", baseUrl.toString());
-
-    String cdi = IOUtils.resourceToString("/cdi-1659919988589.xml", StandardCharsets.UTF_8);
-
-    String xml = IOUtils.resourceToString("/usgs-us7000fxq2.xml", StandardCharsets.UTF_8);
 
     mockWebServer.enqueue(new MockResponse().setResponseCode(429));
 
@@ -155,6 +149,56 @@ class EventDetailsGrabberExecutorTest {
     verify(notifier, times(0)).notify(any(), any());
 
     verify(notifier, times(1)).retry(eq(queueUrl), eq(message), eq(delay));
+
+    verifyNoMoreInteractions(notifier);
+  }
+
+  @Test
+  void testConflict() throws Exception {
+
+    mockWebServer.enqueue(new MockResponse().setResponseCode(409));
+
+    String bucketName = "my-bucket";
+    String topicArn = "topicArn";
+    String queueUrl = "queueUrl";
+    String abortUrl = "abortUrl";
+    int delay = 3;
+
+    EventDetailsGrabberProperties properties = new EventDetailsGrabberProperties();
+    properties.setBaseUrl(baseUrl.toString().replaceAll("/$", ""));
+    properties.setBucketName(bucketName);
+    properties.setTopicArn(topicArn);
+    properties.setRetryQueueUrl(queueUrl);
+    properties.setAbortQueueUrl(abortUrl);
+    properties.setRetryDelaySeconds(delay);
+
+    ObjectMapper objectMapper = ObjectMapperCreator.create();
+    S3Doer s3Doer = mock(S3Doer.class);
+    Notifier notifier = mock(Notifier.class);
+    UsgsApiQueryier usgsApiQueryier = new UsgsApiQueryier(s3Doer, properties, objectMapper);
+    EventDetailsGrabberExecutor executor = new EventDetailsGrabberExecutor(usgsApiQueryier, notifier, properties);
+
+    String eventId = "us7000fxq2";
+    String date = "2021-11-28";
+
+    EventDetailGrabberMessage message = EventDetailGrabberMessage.Builder.builder().withEventId(eventId).withDate(date).build();
+
+    executor.execute(message);
+
+    RecordedRequest request1 = mockWebServer.takeRequest();
+    assertEquals("/fdsnws/event/1/query", request1.getRequestUrl().encodedPath());
+    assertEquals("format=geojson&eventid=us7000fxq2", request1.getRequestUrl().encodedQuery());
+
+
+    verify(s3Doer, times(0)).saveFile(
+        any(),
+        any(),
+        any());
+
+
+    verify(notifier, times(0)).notify(any(), any());
+
+    verify(notifier, times(1)).abort(eq(abortUrl), eq(EventDetailGrabberMessage.Builder.builder(message).withError("Conflict. The event was deleted: " + properties.getBaseUrl() + "/fdsnws/event/1/query?format=geojson&eventid=us7000fxq2 : 409 : Client Error : ").build()));
 
     verifyNoMoreInteractions(notifier);
   }

@@ -18,7 +18,7 @@ Parameters:
     Description: The amount of memory for the initiator lambda
     Type: Number
     MinValue: 256
-    Default: 1024
+    Default: 512
   InitiatorLambdaTimeout:
     Description: The timeout in seconds for the initiator lambda
     Type: Number
@@ -53,7 +53,7 @@ Parameters:
     Description: The amount of memory for the event grabber lambda
     Type: Number
     MinValue: 256
-    Default: 1024
+    Default: 512
   EventGrabberLambdaConcurrency:
     Description: The maximum number of instances to create when processing queues
     Type: Number
@@ -73,7 +73,7 @@ Parameters:
     Description: The amount of memory for the event details grabber lambda
     Type: Number
     MinValue: 256
-    Default: 1024
+    Default: 512
   EventDetailsGrabberLambdaConcurrency:
     Description: The maximum number of instances of the event details grabber lambda
     Type: Number
@@ -105,12 +105,12 @@ Parameters:
     Description: The amount of memory for the report initiator lambda
     Type: Number
     MinValue: 256
-    Default: 1024
+    Default: 512
   ReportInitiatorLambdaConcurrency:
     Description: The maximum number of instances of the report initiator lambda
     Type: Number
     MinValue: 1
-    Default: 30
+    Default: 50
   ReportInitiatorLambdaTimeout:
     Description: The timeout in seconds for the report initiator lambda
     Type: Number
@@ -121,7 +121,7 @@ Parameters:
     Description: The amount of memory for the report initiator lambda
     Type: Number
     MinValue: 256
-    Default: 1024
+    Default: 2048
   ReportGenerationLambdaConcurrency:
     Description: The maximum number of instances of the report generator lambda
     Type: Number
@@ -132,7 +132,7 @@ Parameters:
     Type: Number
     MinValue: 10
     MaxValue: 900
-    Default: 480
+    Default: 900
   UsgsBaseUrl:
     Description: The base url for the earthquake API
     Type: String
@@ -146,6 +146,10 @@ Parameters:
     Type: Number
     MinValue: 0
     Default: 15
+  MinimumMagnitude:
+    Description: Only return results with this magnitude or greater
+    Type: Number
+    Default: 4.0
 
 
 
@@ -186,6 +190,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        StackPrefix: !Ref StackPrefix
         DeploymentBucketName:
           Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
         RolePermissionsBoundary: !Ref RolePermissionsBoundary
@@ -214,6 +219,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        StackPrefix: !Ref StackPrefix
         DeploymentBucketName:
           Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
         RolePermissionsBoundary: !Ref RolePermissionsBoundary
@@ -238,6 +244,7 @@ Resources:
         EventGrabberLambdaPageSize: !Ref EventGrabberLambdaPageSize
         UsgsBaseUrl: !Ref UsgsBaseUrl
         LogRetentionInDays: !Ref LogRetentionInDays
+        MinimumMagnitude: !Ref MinimumMagnitude
       TemplateURL:
         Fn::Sub:
           - https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/stack/nested/event-grabber-stack.yaml
@@ -248,6 +255,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        StackPrefix: !Ref StackPrefix
         DeploymentBucketName:
           Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
         RolePermissionsBoundary: !Ref RolePermissionsBoundary
@@ -266,6 +274,10 @@ Resources:
           Fn::GetAtt:
             - MessagingStack
             - Outputs.UsgsEventDetailsQueryQueueUrl
+        UsgsEventDetailsDeadLetterQueueUrl:
+          Fn::GetAtt:
+            - MessagingStack
+            - Outputs.UsgsEventDetailsDeadLetterQueueUrl
         UsgsEventDetailsDeadLetterQueueArn:
           Fn::GetAtt:
             - MessagingStack
@@ -293,6 +305,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        StackPrefix: !Ref StackPrefix
         DeploymentBucketName:
           Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
         RolePermissionsBoundary: !Ref RolePermissionsBoundary
@@ -323,6 +336,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        StackPrefix: !Ref StackPrefix
         DeploymentBucketName:
           Fn::ImportValue: !Sub ${StackPrefix}-quake-net-deployment-bucket
         RolePermissionsBoundary: !Ref RolePermissionsBoundary
