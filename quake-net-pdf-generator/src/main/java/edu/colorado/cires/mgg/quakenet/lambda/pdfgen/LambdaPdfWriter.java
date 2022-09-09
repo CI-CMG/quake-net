@@ -148,8 +148,8 @@ public class LambdaPdfWriter {
     columns.put("Mag", 4);
     columns.put("Mag. Type", 6);
     columns.put("Region", 25);
-    columns.put("Felt At", 20);
-    columns.put("Other Info", 30);
+    columns.put("Felt At", 30);
+    columns.put("Other Info", 20);
     int[] widths = columns.values().stream().mapToInt(Integer::intValue).toArray();
 
     PdfPTable table = new PdfPTable(columns.size());
