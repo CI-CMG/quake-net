@@ -1,14 +1,9 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
-import com.itextpdf.text.DocumentException;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
-import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
-import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import edu.colorado.cires.mgg.quakenet.s3.util.S3FileUtilities;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -30,7 +25,7 @@ public class DataOperations {
   }
 
   public void writePdf(String bucketName, String key, byte[] content) {
-      fileUploader.saveUncompressedFile(bucketName, key, outputStream -> {
+    fileUploader.saveUncompressedFile(bucketName, key, outputStream -> {
       try {
         IOUtils.write(content, outputStream);
       } catch (IOException e) {

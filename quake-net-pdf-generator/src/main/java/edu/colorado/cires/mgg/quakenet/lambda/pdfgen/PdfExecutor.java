@@ -1,6 +1,6 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
-import com.itextpdf.text.DocumentException;
+import com.lowagie.text.DocumentException;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;

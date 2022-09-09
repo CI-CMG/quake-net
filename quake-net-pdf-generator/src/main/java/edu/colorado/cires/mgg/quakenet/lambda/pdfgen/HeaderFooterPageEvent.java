@@ -1,21 +1,23 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.ExceptionConverter;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Image;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.ColumnText;
-import com.itextpdf.text.pdf.PdfContentByte;
-import com.itextpdf.text.pdf.PdfName;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfPageEventHelper;
-import com.itextpdf.text.pdf.PdfTemplate;
-import com.itextpdf.text.pdf.PdfWriter;
+
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.ExceptionConverter;
+import com.lowagie.text.Font;
+import com.lowagie.text.Image;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.ColumnText;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfName;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfPageEventHelper;
+import com.lowagie.text.pdf.PdfTemplate;
+import com.lowagie.text.pdf.PdfWriter;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -43,7 +45,7 @@ public class HeaderFooterPageEvent extends PdfPageEventHelper {
     t = writer.getDirectContent().createTemplate(30, 16);
     try {
       total = Image.getInstance(t);
-      total.setRole(PdfName.ARTIFACT);
+//      total.setRole(PdfName.ARTIFACT);
     } catch (DocumentException de) {
       throw new ExceptionConverter(de);
     }
@@ -66,11 +68,11 @@ public class HeaderFooterPageEvent extends PdfPageEventHelper {
       footer.getDefaultCell().setBorder(Rectangle.NO_BORDER);
 
       // add generated
-      footer.addCell(new Phrase(String.format("Report Generated %s UTC", created), new Font(Font.FontFamily.HELVETICA, 8)));
+      footer.addCell(new Phrase(String.format("Report Generated %s UTC", created), new Font(Font.HELVETICA, 8)));
 
       // add current page count
       footer.getDefaultCell().setHorizontalAlignment(Element.ALIGN_RIGHT);
-      footer.addCell(new Phrase(String.format("Page %d of", writer.getPageNumber()), new Font(Font.FontFamily.HELVETICA, 8)));
+      footer.addCell(new Phrase(String.format("Page %d of", writer.getPageNumber()), new Font(Font.HELVETICA, 8)));
 
       // add placeholder for total page count
       PdfPCell totalPageCount = new PdfPCell(total);
@@ -88,10 +90,9 @@ public class HeaderFooterPageEvent extends PdfPageEventHelper {
   }
 
   public void onCloseDocument(PdfWriter writer, Document document) {
-    int totalLength = String.valueOf(writer.getPageNumber()).length();
+    int page = writer.getPageNumber() - 1;
+    int totalLength = String.valueOf(page).length();
     int totalWidth = totalLength * 15;
-    ColumnText.showTextAligned(t, Element.ALIGN_RIGHT,
-        new Phrase(String.valueOf(writer.getPageNumber()), new Font(Font.FontFamily.HELVETICA, 8)),
-        totalWidth, 6, 0);
+    ColumnText.showTextAligned(t, Element.ALIGN_RIGHT, new Phrase(String.valueOf(page), new Font(Font.HELVETICA, 8)), totalWidth, 6, 0);
   }
 }

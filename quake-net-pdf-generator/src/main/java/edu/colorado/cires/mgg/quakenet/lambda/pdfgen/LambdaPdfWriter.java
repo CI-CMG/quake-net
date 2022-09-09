@@ -1,21 +1,20 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Font.FontFamily;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.Utilities;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfWriter;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.Utilities;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.model.QnCdi;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
+import java.awt.Color;
 import java.io.OutputStream;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -111,6 +110,12 @@ public class LambdaPdfWriter {
     return String.format("%.0f", depthKm);
   }
 
+  private static double getSeconds(ZonedDateTime dt) {
+    double sec = dt.getSecond();
+    double part = ((double) dt.getNano()) / 1000000000D;
+    return sec + part;
+  }
+
   public static void writePdf(List<QnEvent> events, ReportGenerateMessage message, OutputStream outputStream) throws DocumentException {
 
     String title = String.format("Earthquakes %d-%02d", message.getYear(), message.getMonth());
@@ -119,7 +124,7 @@ public class LambdaPdfWriter {
     float marginSides = Utilities.inchesToPoints(0.25f);
     Rectangle pageSize = PageSize.LEGAL.rotate();
 
-    final FontFamily defaultFontFamily = FontFamily.HELVETICA;
+    final int defaultFontFamily = Font.HELVETICA;
     final float defaultFontSize = 8f;
     final Font defaultFont = new Font(defaultFontFamily, defaultFontSize);
 
@@ -158,12 +163,12 @@ public class LambdaPdfWriter {
 
     PdfPCell header = new PdfPCell();
     header.setColspan(columns.size());
-    header.setBackgroundColor(BaseColor.BLACK);
-    header.setPhrase(new Phrase(title, new Font(defaultFontFamily, defaultFontSize, Font.UNDEFINED, BaseColor.WHITE)));
+    header.setBackgroundColor(Color.BLACK);
+    header.setPhrase(new Phrase(title, new Font(defaultFontFamily, defaultFontSize, Font.UNDEFINED, Color.WHITE)));
     header.setHorizontalAlignment(Element.ALIGN_CENTER);
     table.addCell(header);
 
-    table.getDefaultCell().setBackgroundColor(BaseColor.LIGHT_GRAY);
+    table.getDefaultCell().setBackgroundColor(Color.LIGHT_GRAY);
 
     columns.keySet().stream().map(t -> new Phrase(t, defaultFont)).forEach(table::addCell);
 
@@ -176,11 +181,11 @@ public class LambdaPdfWriter {
       table.addCell(new Phrase(String.format("%02d", dt.getDayOfMonth()), defaultFont));
       table.addCell(new Phrase(String.format("%02d", dt.getHour()), defaultFont));
       table.addCell(new Phrase(String.format("%02d", dt.getMinute()), defaultFont));
-      table.addCell(new Phrase(String.format("%02d", dt.getSecond()), defaultFont));
+      table.addCell(new Phrase(String.format("%.1f", getSeconds(dt)), defaultFont));
       table.addCell(new Phrase(String.format("%.3f", event.getLatitude()), defaultFont));
       table.addCell(new Phrase(String.format("%.3f", event.getLongitude()), defaultFont));
       table.addCell(new Phrase(depthToKm(event.getDepth()), defaultFont));
-      table.addCell(new Phrase(event.getMagnitude() == null ? "" : String.format("%.2f", event.getMagnitude()), defaultFont));
+      table.addCell(new Phrase(event.getMagnitude() == null ? "" : String.format("%.1f", event.getMagnitude()), defaultFont));
       table.addCell(new Phrase(event.getMagnitudeType() == null ? "" : event.getMagnitudeType(), defaultFont));
       table.addCell(new Phrase(getRegion(event), defaultFont));
       table.addCell(new Phrase(getFeltAt(event), defaultFont));
