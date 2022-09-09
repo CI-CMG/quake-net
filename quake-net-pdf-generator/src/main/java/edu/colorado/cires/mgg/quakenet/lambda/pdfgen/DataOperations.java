@@ -29,17 +29,10 @@ public class DataOperations {
     return fileUploader.isFileExists(bucketName, key);
   }
 
-  public void writePdf(String bucketName, String key, List<QnEvent> events, ReportGenerateMessage message) {
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    try {
-      PdfWriter.writePdf(events, message, bos);
-    } catch (DocumentException e) {
-      throw new IllegalStateException("An error occurred writing report", e);
-    }
-
-    fileUploader.saveUncompressedFile(bucketName, key, outputStream -> {
+  public void writePdf(String bucketName, String key, byte[] content) {
+      fileUploader.saveUncompressedFile(bucketName, key, outputStream -> {
       try {
-        IOUtils.write(bos.toByteArray(), outputStream);
+        IOUtils.write(content, outputStream);
       } catch (IOException e) {
         throw new IllegalStateException("An error occurred writing report", e);
       }

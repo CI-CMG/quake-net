@@ -44,7 +44,7 @@ Resources:
         Fn::If:
           - HasPermissionsBoundary
           - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
-          - AWS::NoValue
+          - !Ref AWS::NoValue
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -148,30 +148,6 @@ Resources:
       ServiceToken: !GetAtt BucketDrainLambda.Arn
       bucketName: !Ref QuakeNetSourceBucketDev
 
-  QuakeNetSourceBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !If [ IsProduction, !Ref QuakeNetSourceBucketProd, !Ref QuakeNetSourceBucketDev ]
-      PolicyDocument:
-        Statement:
-          - Sid: AllowPublicRead,
-            Effect: Allow
-            Principal:
-              AWS: "*"
-            Action: s3:GetObject
-            Resource:
-              - Fn::Sub:
-                  - arn:${AWS::Partition}:s3:::${StackPrefix}-${AWS::AccountId}-${Suffix}/*
-                  - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
-          - Sid: AllowPublicList,
-            Effect: Allow
-            Principal:
-              AWS: "*"
-            Action: s3:ListBucket
-            Resource:
-              - Fn::Sub:
-                  - arn:${AWS::Partition}:s3:::${StackPrefix}-${AWS::AccountId}-${Suffix}
-                  - Suffix: !FindInMap [ BucketNameMap, QuakeNetSourceBucket, Value ]
 
 #######################################################
 

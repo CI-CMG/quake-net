@@ -4,21 +4,27 @@ import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Font.FontFamily;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.Utilities;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.model.QnCdi;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import java.io.OutputStream;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class PdfWriter {
+public class LambdaPdfWriter {
 
   private static String getRegion(QnEvent event) {
     if (event.getFlinnEngdahlRegion() != null && !event.getFlinnEngdahlRegion().isEmpty()) {
@@ -69,21 +75,14 @@ public class PdfWriter {
       parts.add(country);
     }
 
-    sb.append(String.join(", ", parts))
-        .append(" - CDI: ").append(cdi.getCdi())
-        .append(" Dist (km): ").append(cdi.getDistKm())
-        .append(" Lat: ").append(cdi.getLatitude())
-        .append(" Lon: ").append(cdi.getLongitude())
-        .append(" Resp: ").append(cdi.getNumResp());
+    sb.append(String.join(", ", parts)).append(" - CDI: ").append(String.format("%.0f", cdi.getCdi()));
+
 
     return sb.toString();
   }
 
   private static String getFeltAt(QnEvent event) {
     StringBuilder sb = new StringBuilder();
-    if (event.getFeltDescription() != null && !event.getFeltDescription().isEmpty()) {
-      sb.append(event.getFeltDescription()).append("\n");
-    }
     event.getCdis().forEach(cdi -> {
       sb.append(getFeltAt(cdi)).append("\n");
     });
@@ -93,6 +92,9 @@ public class PdfWriter {
   private static String getComments(QnEvent event) {
     StringBuilder sb = new StringBuilder();
     event.getComments().forEach(comment -> sb.append(comment).append("\n"));
+    if (event.getFeltDescription() != null && !event.getFeltDescription().isEmpty()) {
+      sb.append(event.getFeltDescription()).append("\n");
+    }
     for (Entry<String, List<String>> entry : event.getOtherDescriptions().entrySet()) {
       for (String comment : entry.getValue()) {
         sb.append(entry.getKey()).append(": ").append(comment).append("\n");
@@ -101,37 +103,52 @@ public class PdfWriter {
     return sb.toString();
   }
 
+  private static String depthToKm(Double depthM) {
+    if (depthM == null) {
+      return "";
+    }
+    double depthKm = depthM / 1000D;
+    return String.format("%.0f", depthKm);
+  }
+
   public static void writePdf(List<QnEvent> events, ReportGenerateMessage message, OutputStream outputStream) throws DocumentException {
 
-    String title = "Earthquakes " + message.getYear() + "-" + message.getMonth();
-//    try () {
+    String title = String.format("Earthquakes %d-%02d", message.getYear(), message.getMonth());
+
+    float marginBottom = Utilities.inchesToPoints(0.5f);
+    float marginSides = Utilities.inchesToPoints(0.25f);
+    Rectangle pageSize = PageSize.LEGAL.rotate();
+
+    final FontFamily defaultFontFamily = FontFamily.HELVETICA;
+    final float defaultFontSize = 8f;
+    final Font defaultFont = new Font(defaultFontFamily, defaultFontSize);
 
     Document document = new Document(
-        PageSize.LEGAL.rotate(),
+        pageSize,
+        marginSides,
+        marginSides,
         Utilities.inchesToPoints(0.25f),
-        Utilities.inchesToPoints(0.25f),
-        Utilities.inchesToPoints(0.25f),
-        Utilities.inchesToPoints(0.25f)
+        marginBottom
     );
 
-//      try {
+    PdfWriter writer = PdfWriter.getInstance(document, outputStream);
+    writer.setPageEvent(new HeaderFooterPageEvent(marginBottom, marginSides, pageSize.getWidth()));
 
-    com.itextpdf.text.pdf.PdfWriter.getInstance(document, outputStream);
+
     document.open();
-//    Font font = FontFactory.getFont(FontFactory.COURIER, 12, BaseColor.BLACK);
-//    Chunk chunk = new Chunk(title, font);
-//    document.add(chunk);
 
     LinkedHashMap<String, Integer> columns = new LinkedHashMap<>();
-    columns.put("ID", 15);
-    columns.put("Date / Time", 15);
-    columns.put("Latitude", 10);
-    columns.put("Longitude", 10);
-    columns.put("Depth (m)", 10);
-    columns.put("Magnitude", 10);
-    columns.put("Mag. Type", 10);
-    columns.put("Region", 20);
-    columns.put("Felt At", 30);
+    columns.put("Day", 3);
+    columns.put("Hr", 3);
+    columns.put("Min", 3);
+    columns.put("Sec", 3);
+    columns.put("Lat", 5);
+    columns.put("Long", 5);
+    columns.put("Depth (km)", 6);
+    columns.put("Mag", 4);
+    columns.put("Mag. Type", 6);
+    columns.put("Region", 25);
+    columns.put("Felt At", 20);
     columns.put("Other Info", 30);
     int[] widths = columns.values().stream().mapToInt(Integer::intValue).toArray();
 
@@ -141,57 +158,39 @@ public class PdfWriter {
 
     PdfPCell header = new PdfPCell();
     header.setColspan(columns.size());
-    header.setBackgroundColor(BaseColor.LIGHT_GRAY);
-    header.setPhrase(new Phrase(title));
+    header.setBackgroundColor(BaseColor.BLACK);
+    header.setPhrase(new Phrase(title, new Font(defaultFontFamily, defaultFontSize, Font.UNDEFINED, BaseColor.WHITE)));
     header.setHorizontalAlignment(Element.ALIGN_CENTER);
     table.addCell(header);
 
     table.getDefaultCell().setBackgroundColor(BaseColor.LIGHT_GRAY);
 
-    columns.keySet().forEach(table::addCell);
+    columns.keySet().stream().map(t -> new Phrase(t, defaultFont)).forEach(table::addCell);
 
     table.getDefaultCell().setBackgroundColor(null);
 
     table.setHeaderRows(2);
 
     for (QnEvent event : events) {
-      table.addCell(event.getEventId());
-      table.addCell(event.getOriginTime().toString());
-      table.addCell(event.getLatitude().toString());
-      table.addCell(event.getLongitude().toString());
-      table.addCell(event.getDepth() == null ? "" : event.getDepth().toString());
-      table.addCell(event.getMagnitude() == null ? "" : event.getMagnitude().toString());
-      table.addCell(event.getMagnitudeType() == null ? "" : event.getMagnitudeType());
-      table.addCell(getRegion(event));
-      table.addCell(getFeltAt(event));
-      table.addCell(getComments(event));
+      ZonedDateTime dt = event.getOriginTime().atZone(ZoneId.of("UTC"));
+      table.addCell(new Phrase(String.format("%02d", dt.getDayOfMonth()), defaultFont));
+      table.addCell(new Phrase(String.format("%02d", dt.getHour()), defaultFont));
+      table.addCell(new Phrase(String.format("%02d", dt.getMinute()), defaultFont));
+      table.addCell(new Phrase(String.format("%02d", dt.getSecond()), defaultFont));
+      table.addCell(new Phrase(String.format("%.3f", event.getLatitude()), defaultFont));
+      table.addCell(new Phrase(String.format("%.3f", event.getLongitude()), defaultFont));
+      table.addCell(new Phrase(depthToKm(event.getDepth()), defaultFont));
+      table.addCell(new Phrase(event.getMagnitude() == null ? "" : String.format("%.2f", event.getMagnitude()), defaultFont));
+      table.addCell(new Phrase(event.getMagnitudeType() == null ? "" : event.getMagnitudeType(), defaultFont));
+      table.addCell(new Phrase(getRegion(event), defaultFont));
+      table.addCell(new Phrase(getFeltAt(event), defaultFont));
+      table.addCell(new Phrase(getComments(event), defaultFont));
     }
 
     document.add(table);
 
-
-        /*
-            Path path = Paths.get(ClassLoader.getSystemResource("Java_logo.png").toURI());
-    Image img = Image.getInstance(path.toAbsolutePath().toString());
-    img.scalePercent(10);
-
-    PdfPCell imageCell = new PdfPCell(img);
-    table.addCell(imageCell);
-
-    PdfPCell horizontalAlignCell = new PdfPCell(new Phrase("row 2, col 2"));
-    horizontalAlignCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-    table.addCell(horizontalAlignCell);
-
-    PdfPCell verticalAlignCell = new PdfPCell(new Phrase("row 2, col 3"));
-    verticalAlignCell.setVerticalAlignment(Element.ALIGN_BOTTOM);
-    table.addCell(verticalAlignCell);
-         */
-
-//      } finally {
     document.close();
-//      }
 
-//    }
 
   }
 }

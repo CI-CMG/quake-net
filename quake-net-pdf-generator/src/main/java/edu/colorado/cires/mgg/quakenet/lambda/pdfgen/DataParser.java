@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -34,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DataParser {
+
+  private static final int MAX_CDIS = 5;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataParser.class);
 
@@ -90,7 +93,8 @@ public class DataParser {
   }
 
   public static void enrichCdi(QnEvent event, Cdidata cdidata) {
-    if (cdidata.getCdi() != null && cdidata.getCdi().getLocations() != null) {
+    if (cdidata.getCdi() != null && cdidata.getCdi().getLocations() != null && cdidata.getCdi().getLocations().size() > 0) {
+      List<QnCdi> cdis = new ArrayList<>(cdidata.getCdi().getLocations().size());
       for (Location location : cdidata.getCdi().getLocations()) {
         QnCdi cdi = new QnCdi();
         cdi.setCdi(location.getCdi());
@@ -101,8 +105,10 @@ public class DataParser {
         cdi.setName(location.getName());
         cdi.setState(location.getState());
         cdi.setCode(location.getLocationName());
-        event.addCdi(cdi);
+        cdis.add(cdi);
       }
+      Collections.sort(cdis, (c1, c2) -> Double.compare(c2.getCdi(), c1.getCdi()));
+      event.setCdis(cdis.subList(0, Math.min(MAX_CDIS, cdis.size())));
     }
   }
 
@@ -184,7 +190,8 @@ public class DataParser {
               EventDescriptionType.FLINN_ENGDAHL_REGION,
               EventDescriptionType.EARTHQUAKE_NAME,
               EventDescriptionType.REGION_NAME,
-              EventDescriptionType.FELT_REPORT
+              EventDescriptionType.FELT_REPORT,
+              EventDescriptionType.NEAREST_CITIES
           )));
 
       // 0..* comment
@@ -365,7 +372,7 @@ public class DataParser {
         // 0..1 type
         EventDescriptionType type = getDescriptionType(description).orElse(null);
         if (type == null) {
-          event.addOtherDescription(null, maybeText.get());
+          event.addOtherDescription("description", maybeText.get());
         } else if (!excluded.contains(type)) {
           event.addOtherDescription(type.value(), maybeText.get());
         }

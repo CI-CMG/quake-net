@@ -1,7 +1,5 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import java.io.ByteArrayOutputStream;
@@ -18,7 +16,7 @@ class PdfWriterTest {
     List<QnEvent> events = new ArrayList<>();
     ReportGenerateMessage message = ReportGenerateMessage.Builder.builder().withYear(2012).withMonth(5).build();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    PdfWriter.writePdf(events, message, out);
+    LambdaPdfWriter.writePdf(events, message, out);
   }
 
 }

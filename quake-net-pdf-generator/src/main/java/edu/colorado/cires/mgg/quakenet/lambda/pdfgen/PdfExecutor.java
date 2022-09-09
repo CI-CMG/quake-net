@@ -1,11 +1,15 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
+import com.itextpdf.text.DocumentException;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.quakeml.xmlns.quakeml._1.Quakeml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +51,13 @@ public class PdfExecutor {
         message.getYear(), message.getMonth(), message.getYear(), message.getMonth());
 
     LOGGER.info("Writing PDF: {}-{}", message.getYear(), message.getMonth());
-    dataOperations.writePdf(properties.getBucketName(), key, events, message);
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    try {
+      LambdaPdfWriter.writePdf(events.stream().sorted(Comparator.comparing(QnEvent::getOriginTime)).collect(Collectors.toList()), message, bos);
+    } catch (DocumentException e) {
+      throw new IllegalStateException("An error occurred generating report", e);
+    }
+    dataOperations.writePdf(properties.getBucketName(), key, bos.toByteArray());
     LOGGER.info("Done Writing PDF: {}-{}", message.getYear(), message.getMonth());
   }
 }
