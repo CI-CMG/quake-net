@@ -1,0 +1,42 @@
+<project>
+  <target name="go">
+    <var name="snapshot.list" value=""/>
+    <for param="file">
+      <path>
+        <fileset dir="../" includes="**/target/dependencies.txt"/>
+      </path>
+      <sequential>
+        <loadfile property="resolved.dependencies" srcFile="@{file}"/>
+        <for param="line" list="${resolved.dependencies}" delimiter="${line.separator}">
+          <sequential>
+            <if>
+              <and>
+                <contains string="@{line}" substring="SNAPSHOT"/>
+                <not><contains string="@{line}" substring="${project.groupId}"/></not>
+              </and>
+              <then>
+                <echo message="@{line}"/>
+                <propertyregex property="snapshot.prop" override="true" input="@{line}" regexp="\s*([a-zA-Z0-9_\-\.:]+)\s*.*" select="\1"/>
+                <if>
+                  <equals arg1="${snapshot.list}" arg2=""/>
+                  <then>
+                    <var name="snapshot.list" value="${snapshot.prop}"/>
+                  </then>
+                  <else>
+                    <var name="snapshot.list" value="${snapshot.list},${snapshot.prop}"/>
+                  </else>
+                </if>
+              </then>
+            </if>
+          </sequential>
+        </for>
+        <var name="resolved.dependencies" unset="true"/>
+
+      </sequential>
+    </for>
+    <propertyfile file="target/parse-dependencies.properties">
+      <entry key="snapshot.list" value="${snapshot.list}"/>
+    </propertyfile>
+  </target>
+</project>
+

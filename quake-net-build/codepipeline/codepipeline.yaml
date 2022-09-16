@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: build-@project.artifactId@-@git.branch@
+Description: build-@project.artifactId@-@git.branch.dash@
 
 Parameters:
   RolePermissionsBoundary:
@@ -89,7 +89,6 @@ Resources:
               }
             }
           };
-
   TriggerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -160,7 +159,7 @@ Resources:
   CodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: @project.artifactId@_@git.branch@-build
+      Name: @project.artifactId@_@git.branch.underscore@-build
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: CODEPIPELINE
@@ -171,6 +170,7 @@ Resources:
         PrivilegedMode: true
       Source:
         Type: CODEPIPELINE
+        BuildSpec: buildspec.yaml
       TimeoutInMinutes: 20
 
   CodePipeline:
@@ -194,8 +194,8 @@ Resources:
                 ConnectionArn:
                   Fn::ImportValue: !Sub ${Prefix}-build-GitHubCodeStarConnectionArn
                 FullRepositoryId: @git.remote.origin.url.suffix@
-                BranchName: @git.branch@
-                OutputArtifactFormat: "CODE_ZIP"
+                BranchName: '@git.branch@'
+                OutputArtifactFormat: CODEBUILD_CLONE_REF
               RunOrder: 1
         - Name: Build
           Actions:
@@ -232,7 +232,7 @@ Resources:
   SlackNotification:
     Type: AWS::CodeStarNotifications::NotificationRule
     Properties:
-      Name: @project.artifactId@_@git.branch@
+      Name: @project.artifactId@_@git.branch.underscore@
       DetailType: FULL
       Resource: !Sub arn:${AWS::Partition}:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}
       EventTypeIds:
