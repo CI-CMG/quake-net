@@ -14,6 +14,7 @@ phases:
       - echo "$gpg_key" | base64 -d > /tmp/gpg.key
       - git config --global user.email "mggdev-aws@mggdev.cloud"
       - git config --global user.name "mggdev-aws"
+      - chmod +x quake-net-build/target/codepipeline/buildspec-release.sh
   install:
     runtime-versions:
       java: corretto11

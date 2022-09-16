@@ -10,12 +10,13 @@ phases:
     commands:
       - git config --global user.email "mggdev-aws@mggdev.cloud"
       - git config --global user.name "mggdev-aws"
+      - chmod +x quake-net-build/target/codepipeline/buildspec-branch.sh
   install:
     runtime-versions:
       java: corretto11
   build:
     commands:
-      - mvn -B install -Pdep-check
+      - mvn -B install -DskipTests
       - quake-net-build/target/codepipeline/buildspec-branch.sh "$github_pat" "$github_username"
 artifacts:
   files:
