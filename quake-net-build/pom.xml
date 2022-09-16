@@ -15,6 +15,7 @@
 
   <properties>
     <maven.main.skip>true</maven.main.skip>
+    <project.mainBranch>trunk</project.mainBranch>
   </properties>
 
   <build>

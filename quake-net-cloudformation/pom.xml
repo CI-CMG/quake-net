@@ -56,13 +56,6 @@
     </dependency>
     <dependency>
       <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-      <artifactId>quake-net-report-initiator</artifactId>
-      <version>${project.version}</version>
-      <classifier>lambda</classifier>
-      <type>zip</type>
-    </dependency>
-    <dependency>
-      <groupId>edu.colorado.cires.mgg.quake-net</groupId>
       <artifactId>quake-net-custom-resource</artifactId>
       <version>${project.version}</version>
       <classifier>lambda</classifier>

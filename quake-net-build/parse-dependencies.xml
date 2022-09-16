@@ -15,7 +15,6 @@
                 <not><contains string="@{line}" substring="${project.groupId}"/></not>
               </and>
               <then>
-                <echo message="@{line}"/>
                 <propertyregex property="snapshot.prop" override="true" input="@{line}" regexp="\s*([a-zA-Z0-9_\-\.:]+)\s*.*" select="\1"/>
                 <if>
                   <equals arg1="${snapshot.list}" arg2=""/>
@@ -34,8 +33,12 @@
 
       </sequential>
     </for>
+
+    <propertyregex property="project.branch" override="true" input="${project.version}" regexp="([0-9]+\.[0-9]+).*" select="\1"/>
+
     <propertyfile file="target/parse-dependencies.properties">
       <entry key="snapshot.list" value="${snapshot.list}"/>
+      <entry key="project.branch" value="${project.branch}"/>
     </propertyfile>
   </target>
 </project>
