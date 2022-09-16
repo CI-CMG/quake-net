@@ -14,13 +14,13 @@ phases:
       - echo "$gpg_key" | base64 -d > /tmp/gpg.key
       - git config --global user.email "mggdev-aws@mggdev.cloud"
       - git config --global user.name "mggdev-aws"
-      - git checkout 1.0
   install:
     runtime-versions:
       java: corretto11
   build:
     commands:
-      - mvn -B build-helper:parse-version -Dsign.keyId=$gpg_key_id -Dsign.keyPass=$gpg_key_pw -Dsign.keyFile=/tmp/gpg.key -Dgit.username=$github_username -Dgit.password=$github_pat -Dresume=false -Dtag='v${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}' -DreleaseVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}' -DdevelopmentVersion='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion}-SNAPSHOT' release:prepare release:perform
+      - mvn -B install -Pdep-check
+      - quake-net-build/target/codepipeline/buildspec-release.sh "$gpg_key" "$gpg_key_id" "$gpg_key_pw" "$github_pat" "$github_username"
 artifacts:
   files:
     - '**/*'

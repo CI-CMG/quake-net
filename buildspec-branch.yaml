@@ -10,13 +10,13 @@ phases:
     commands:
       - git config --global user.email "mggdev-aws@mggdev.cloud"
       - git config --global user.name "mggdev-aws"
-      - git checkout 1.0
   install:
     runtime-versions:
       java: corretto11
   build:
     commands:
-      - mvn -B build-helper:parse-version -Dgit.username=$github_username -Dgit.password=$github_pat -DbranchName='${parsedVersion.majorVersion}.${parsedVersion.minorVersion}' -DdevelopmentVersion='${parsedVersion.majorVersion}.${parsedVersion.nextMinorVersion}.0-SNAPSHOT' release:branch
+      - mvn -B install -Pdep-check
+      - quake-net-build/target/codepipeline/buildspec-branch.sh "$github_pat" "$github_username"
 artifacts:
   files:
     - '**/*'

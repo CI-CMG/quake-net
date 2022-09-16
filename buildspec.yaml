@@ -6,7 +6,7 @@ phases:
       java: corretto11
   build:
     commands:
-      - mvn -B deploy
+      - mvn -B deploy -Pdep-check
 artifacts:
   files:
     - '**/*'
