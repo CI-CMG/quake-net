@@ -5,7 +5,7 @@
   <parent>
     <artifactId>quake-net-parent</artifactId>
     <groupId>edu.colorado.cires.mgg.quake-net</groupId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>quake-net-event-details-grabber</artifactId>
