@@ -137,10 +137,15 @@ Parameters:
     Description: The base url for the earthquake API
     Type: String
     Default: 'https://earthquake.usgs.gov'
-  MaxDatesPerTrigger:
-    Description: The number of date requests for a cron trigger
+  MaxMonthsPerTrigger:
+    Description: The number of monthly date requests for a cron trigger
     Type: Number
-    Default: 366
+    Default: 7
+  RetryQuietTimeMinutes:
+    Description: The number of minutes from the last action for a month before retrying
+    Type: Number
+    #8 hours
+    Default: 480
   RetryDelaySeconds:
     Description: The number of seconds a message should delay when retrying because of a 429 response
     Type: Number
@@ -207,7 +212,8 @@ Resources:
             - BucketStack
             - Outputs.QuakeNetSourceBucketName
         Version: @project.version@@dashTimestamp@
-        MaxDatesPerTrigger: !Ref MaxDatesPerTrigger
+        MaxMonthsPerTrigger: !Ref MaxMonthsPerTrigger
+        RetryQuietTimeMinutes: !Ref RetryQuietTimeMinutes
         LogRetentionInDays: !Ref LogRetentionInDays
       TemplateURL:
         Fn::Sub:

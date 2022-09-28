@@ -50,7 +50,7 @@ public class DataOperations {
       try {
         return (Quakeml) JAXBContext.newInstance(Quakeml.class).createUnmarshaller().unmarshal(in);
       } catch (JAXBException e) {
-        throw new IllegalStateException("Unable to read QuakeML data", e);
+        throw new IllegalStateException("Unable to read QuakeML data: " + bucketName + "/" + key, e);
       }
     });
   }

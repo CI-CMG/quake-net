@@ -8,13 +8,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
+import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -116,8 +119,14 @@ class PdfExecutorTest {
     BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
     when(bucketIteratorFactory.create(eq(bucketName), eq("downloads/2020/01/"))).thenReturn(s3ObjectList.iterator());
 
+    ReportInfoFile reportInfoFile = ReportInfoFile.Builder.builder().withStartTime(Instant.now().minusMillis(10000)).withStartReportGeneration(Instant.now().minusMillis(5000)).build();
+
+    Instant now = Instant.now();
+
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    when(infoFileS3Actions.readReportInfoFile(eq(bucketName), eq("reports/2020/01/report-info-2020-01.json.gz"))).thenReturn(Optional.of(reportInfoFile));
     DataParser dataParser = new DataParser(properties, dataOperations, bucketIteratorFactory);
-    PdfExecutor executor = new PdfExecutor(properties, dataParser, dataOperations);
+    PdfExecutor executor = new PdfExecutor(properties, dataParser, dataOperations, infoFileS3Actions, () -> now);
 
     ReportGenerateMessage message = ReportGenerateMessage.Builder.builder().withYear(2020).withMonth(1).build();
 
@@ -139,6 +148,13 @@ class PdfExecutorTest {
       IOUtils.write(pdfCaptor.getValue(), outputStream);
     }
 
+
+    verify(infoFileS3Actions, times(1)).saveReportInfoFile(
+        eq(bucketName),
+        eq("reports/2020/01/report-info-2020-01.json.gz"),
+        eq(ReportInfoFile.Builder.builder(reportInfoFile).withEndReportGeneration(now).build()));
+
   }
+
 
 }

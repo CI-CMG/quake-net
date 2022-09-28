@@ -11,7 +11,9 @@ import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.s3.util.BucketIterator;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -38,7 +40,7 @@ public class PdfGenLambda implements RequestHandler<SQSEvent, SQSBatchResponse> 
     properties.setBucketName(downloadBucket);
     dataWriter = new DataOperations(s3, s3Client);
     dataParser = new DataParser(properties, dataWriter, (bucketName, prefix) -> new BucketIterator(s3Client, bucketName, prefix));
-    executor = new PdfExecutor(properties, dataParser, dataWriter);
+    executor = new PdfExecutor(properties, dataParser, dataWriter, new InfoFileS3Actions(s3, s3Client, objectMapper), Instant::now);
   }
 
   @Override

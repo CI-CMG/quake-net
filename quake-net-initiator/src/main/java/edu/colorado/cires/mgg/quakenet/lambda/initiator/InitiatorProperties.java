@@ -5,14 +5,23 @@ public class InitiatorProperties {
   private String downloadBucket;
   private String defaultStartDate;
   private String topicArn;
-  private Integer maxDatesPerTrigger;
+  private Integer maxMonthsPerTrigger;
+  private Integer retryQuietTimeMinutes;
 
-  public Integer getMaxDatesPerTrigger() {
-    return maxDatesPerTrigger;
+  public Integer getRetryQuietTimeMinutes() {
+    return retryQuietTimeMinutes;
   }
 
-  public void setMaxDatesPerTrigger(Integer maxDatesPerTrigger) {
-    this.maxDatesPerTrigger = maxDatesPerTrigger;
+  public void setRetryQuietTimeMinutes(Integer retryQuietTimeMinutes) {
+    this.retryQuietTimeMinutes = retryQuietTimeMinutes;
+  }
+
+  public Integer getMaxMonthsPerTrigger() {
+    return maxMonthsPerTrigger;
+  }
+
+  public void setMaxMonthsPerTrigger(Integer maxMonthsPerTrigger) {
+    this.maxMonthsPerTrigger = maxMonthsPerTrigger;
   }
 
   public String getDownloadBucket() {
