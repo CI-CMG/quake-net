@@ -1,25 +1,38 @@
 package edu.colorado.cires.mgg.quakenet.lambda.initiator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
-import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
-import java.time.LocalDate;
-import software.amazon.awssdk.services.sns.SnsClient;
+import java.util.ArrayList;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EventGrabberProcessor {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(EventGrabberProcessor.class);
+
+  private final InitiatorProperties properties;
   private final QueryRangeDeterminer queryRangeDeterminer;
   private final QueryRangeIterator queryRangeIterator;
+  private final ReportRetryProcessor reportRetryProcessor;
 
-  public EventGrabberProcessor(InitiatorProperties properties, SnsClient snsClient,
-      ObjectMapper objectMapper, S3ClientMultipartUpload s3, InfoFileS3Actions infoFileS3Actions) {
-    queryRangeDeterminer = new QueryRangeDeterminer(properties, LocalDate::now, infoFileS3Actions);
-    InfoFileSaver fileInfoSaver = new InfoFileSaver(s3, objectMapper);
-    MessageSender messageSender = new MessageSender(snsClient, objectMapper);
-    queryRangeIterator = new QueryRangeIterator(fileInfoSaver, messageSender, properties);
+
+  public EventGrabberProcessor(InitiatorProperties properties,
+      QueryRangeDeterminer queryRangeDeterminer, QueryRangeIterator queryRangeIterator,
+      ReportRetryProcessor reportRetryProcessor) {
+    this.properties = properties;
+
+    this.queryRangeDeterminer = queryRangeDeterminer;
+    this.queryRangeIterator = queryRangeIterator;
+    this.reportRetryProcessor = reportRetryProcessor;
   }
 
   public void process() {
-    queryRangeDeterminer.getQueryRange().ifPresent(queryRangeIterator::forEachDate);
+    List<QueryRange> retries = new ArrayList<>(reportRetryProcessor.prepareFailedReports());
+    if (retries.size() < properties.getMaxMonthsPerTrigger()) {
+      queryRangeDeterminer.getQueryRange().ifPresent(retries::add);
+    }
+    if (!retries.isEmpty()) {
+      LOGGER.info("Processing: {}", retries);
+    }
+    retries.forEach(queryRangeIterator::forEachDate);
   }
 }

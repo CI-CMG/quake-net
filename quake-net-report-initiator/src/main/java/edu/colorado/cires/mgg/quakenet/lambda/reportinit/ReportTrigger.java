@@ -3,10 +3,9 @@ package edu.colorado.cires.mgg.quakenet.lambda.reportinit;
 import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
+import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
-import edu.colorado.cires.mgg.quakenet.s3.util.S3FileUtilities;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.HashSet;
@@ -14,8 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,29 +26,39 @@ public class ReportTrigger {
   private final MessageSender messageSender;
   private final BucketIteratorFactory bucketIteratorFactory;
   private final InfoFileS3Actions infoFileS3Actions;
-  private final S3FileUtilities s3FileUtilities;
+  private final Supplier<Instant> nowFactory;
 
   public ReportTrigger(ReportInitiatorProperties properties,
       MessageSender messageSender, BucketIteratorFactory bucketIteratorFactory,
-      InfoFileS3Actions infoFileS3Actions, S3FileUtilities s3FileUtilities) {
+      InfoFileS3Actions infoFileS3Actions, Supplier<Instant> nowFactory) {
     this.properties = properties;
     this.messageSender = messageSender;
     this.bucketIteratorFactory = bucketIteratorFactory;
     this.infoFileS3Actions = infoFileS3Actions;
-    this.s3FileUtilities = s3FileUtilities;
+    this.nowFactory = nowFactory;
   }
 
-  private boolean isReportInfoFileExists(LocalDate date) {
-    return infoFileS3Actions.isFileExists(
-        properties.getBucketName(),
+  private ReportInfoFile getReportInfoFile(LocalDate date) {
+
+    Optional<ReportInfoFile> reportInfoFile = infoFileS3Actions.readReportInfoFile(properties.getBucketName(),
         String.format("reports/%d/%02d/report-info-%d-%02d.json.gz", date.getYear(), date.getMonthValue(), date.getYear(), date.getMonthValue()));
+    if (reportInfoFile.isPresent()) {
+      if(reportInfoFile.get().getStartReportGeneration() != null){
+        return null;
+      } else {
+        return reportInfoFile.get();
+      }
+    } else {
+      return ReportInfoFile.Builder.builder().withStartTime(nowFactory.get()).build();
+    }
   }
 
   public void triggerReports(EventDetailGrabberMessage message) {
 
     LocalDate date = LocalDate.parse(message.getDate());
 
-    if (!isReportInfoFileExists(date)) {
+    ReportInfoFile reportInfoFile = getReportInfoFile(date);
+    if (reportInfoFile != null) {
       Set<String> expectedEventIds = new HashSet<>();
 
       YearMonth month = YearMonth.from(date);
@@ -97,7 +106,7 @@ public class ReportTrigger {
         }
 
         if (expectedEventIds.isEmpty()) {
-          sendGenerateReportMessage(date.getYear(), date.getMonthValue());
+          sendGenerateReportMessage(date.getYear(), date.getMonthValue(), reportInfoFile);
         } else {
           LOGGER.info("Missing {} keys for {}-{}", expectedEventIds.size(), date.getYear(), date.getMonthValue());
         }
@@ -109,19 +118,12 @@ public class ReportTrigger {
 
   }
 
-  private void sendGenerateReportMessage(int year, int month) {
+  private void sendGenerateReportMessage(int year, int month, ReportInfoFile reportInfoFile) {
 
-    s3FileUtilities.saveFile(
+    infoFileS3Actions.saveReportInfoFile(
         properties.getBucketName(),
         String.format("reports/%d/%02d/report-info-%d-%02d.json.gz", year, month, year, month),
-        outputStream -> {
-          try {
-            IOUtils.write("{}", outputStream, StandardCharsets.UTF_8);
-          } catch (IOException e) {
-            throw new IllegalStateException("Unable to write report info file");
-          }
-        }
-    );
+        ReportInfoFile.Builder.builder(reportInfoFile).withStartReportGeneration(nowFactory.get()).build());
 
     ReportGenerateMessage message = ReportGenerateMessage.Builder.builder()
         .withYear(year)

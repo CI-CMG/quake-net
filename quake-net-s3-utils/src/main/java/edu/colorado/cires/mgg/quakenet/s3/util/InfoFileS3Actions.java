@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
+import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,17 @@ public class InfoFileS3Actions {
       try {
         return objectMapper.readValue(in, InfoFile.class);
       } catch (IOException e) {
-        throw new IllegalStateException("Unable to read info data", e);
+        throw new IllegalStateException("Unable to read info data: " + bucketName + "/" + key, e);
+      }
+    });
+  }
+
+  public Optional<ReportInfoFile> readReportInfoFile(String bucketName, String key) {
+    return fileUploader.readFile(bucketName, key, in -> {
+      try {
+        return objectMapper.readValue(in, ReportInfoFile.class);
+      } catch (IOException e) {
+        throw new IllegalStateException("Unable to read report info data: " + bucketName + "/" + key, e);
       }
     });
   }
@@ -42,7 +53,7 @@ public class InfoFileS3Actions {
     try {
       json = objectMapper.writeValueAsString(infoFile);
     } catch (JsonProcessingException e) {
-      throw new IllegalStateException("Unable to serialize message", e);
+      throw new IllegalStateException("Unable to serialize message: " + bucketName + "/" + key, e);
     }
 
     try (InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))) {
@@ -50,13 +61,33 @@ public class InfoFileS3Actions {
         try {
           IOUtils.copy(inputStream, outputStream);
         } catch (IOException e) {
-          throw new IllegalStateException("An error occurred saving data", e);
+          throw new IllegalStateException("An error occurred saving data: " + bucketName + "/" + key, e);
         }
       });
     } catch (IOException e) {
-      throw new IllegalStateException("An error occurred saving data", e);
+      throw new IllegalStateException("An error occurred saving data: " + bucketName + "/" + key, e);
+    }
+  }
+
+  public void saveReportInfoFile(String bucketName, String key, ReportInfoFile infoFile) {
+    String json;
+    try {
+      json = objectMapper.writeValueAsString(infoFile);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Unable to serialize message: " + bucketName + "/" + key, e);
     }
 
+    try (InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))) {
+      fileUploader.saveFile(bucketName, key, outputStream -> {
+        try {
+          IOUtils.copy(inputStream, outputStream);
+        } catch (IOException e) {
+          throw new IllegalStateException("An error occurred saving data: " + bucketName + "/" + key, e);
+        }
+      });
+    } catch (IOException e) {
+      throw new IllegalStateException("An error occurred saving data: " + bucketName + "/" + key, e);
+    }
   }
 
 }

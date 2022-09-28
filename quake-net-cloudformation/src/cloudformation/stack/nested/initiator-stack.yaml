@@ -30,7 +30,9 @@ Parameters:
   Version:
     Description: The build version
     Type: String
-  MaxDatesPerTrigger:
+  MaxMonthsPerTrigger:
+    Type: Number
+  RetryQuietTimeMinutes:
     Type: Number
   LogRetentionInDays:
     Description: The number of days to keep CloudWatch logs
@@ -128,7 +130,8 @@ Resources:
           DOWNLOAD_BUCKET: !Ref QuakeNetSourceBucketName
           DEFAULT_START_DATE: !Ref DefaultStartDate
           TOPIC_ARN: !Ref InitiatorCompleteTopicArn
-          MAX_DATES_PER_TRIGGER: !Ref MaxDatesPerTrigger
+          MAX_MONTHS_PER_TRIGGER: !Ref MaxMonthsPerTrigger
+          RETRY_QUIET_TIME_MINUTES: !Ref RetryQuietTimeMinutes
 
   InitiatorLambdaLogGroup:
     Type: AWS::Logs::LogGroup
