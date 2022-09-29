@@ -95,17 +95,16 @@ public class UsgsApiQueryier {
       Consumer<List<String>> eventIdConsumer) {
     final int pageSize = properties.getPageSize();
 
-    int resultCount = -1;
+
     int page = 0;
     List<String> allEventIds = new ArrayList<>();
-    while (resultCount != 0) {
+    while (true) {
 
       int offset = page * pageSize + 1;
       page++;
       String uri = buildUri(properties.getBaseUrl(), startTime, endTime, pageSize, offset, properties.getMinimumMagnitude());
       LOGGER.info("Request: {}", uri);
 
-      List<String> eventIds;
 
       CloseableHttpClient httpclient = createClient(properties);
       try {
@@ -115,7 +114,8 @@ public class UsgsApiQueryier {
           String content = readContent(response);
           if (responseCode == 200) {
             FeatureCollection featureCollection = parseGeoJson(content, objectMapper);
-            eventIds = featureCollection.getFeatures().stream().map(GeoJson::getId).collect(Collectors.toList());
+            List<String> eventIds = featureCollection.getFeatures().stream().map(GeoJson::getId).collect(Collectors.toList());
+            allEventIds.addAll(eventIds);
             if (eventIds.isEmpty()) {
               LOGGER.info("No More Results: {} : {} : {}", uri);
               break;
@@ -125,26 +125,18 @@ public class UsgsApiQueryier {
             break;
           } else {
             LOGGER.error("Unexpected Response: {} : {} : {} : {}", uri, responseCode, response.getReasonPhrase(), content);
-            break;
+            throw new IllegalStateException(String.format("Unexpected Response: %s : %d : %s : %s", uri, responseCode, response.getReasonPhrase(), content));
           }
         } finally {
           IOUtils.closeQuietly(response);
         }
-      } catch (Exception e) {
-        LOGGER.error("An error occurred: {} ", uri, e);
-        break;
       } finally {
         IOUtils.closeQuietly(httpclient);
       }
 
-      resultCount = eventIds.size();
-      allEventIds.addAll(eventIds);
-
     }
 
-    if (!allEventIds.isEmpty()) {
-      eventIdConsumer.accept(allEventIds);
-    }
+    eventIdConsumer.accept(allEventIds);
   }
 
 
