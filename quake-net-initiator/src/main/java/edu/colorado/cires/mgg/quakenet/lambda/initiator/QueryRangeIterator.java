@@ -40,14 +40,12 @@ public class QueryRangeIterator {
 
     saveReportInfoFile(YearMonth.of(queryRange.getStart().getYear(), queryRange.getStart().getMonthValue()));
 
-    int count = 0;
     LocalDate date = queryRange.getStart();
-    while (count < properties.getMaxMonthsPerTrigger() && (date.isBefore(queryRange.getEnd()) || date.isEqual(queryRange.getEnd()))) {
+    while (date.isBefore(queryRange.getEnd()) || date.isEqual(queryRange.getEnd())) {
       LOGGER.info("Processing {}", date);
       saveInfoFile(date);
       sendMessage(date);
       date = date.plusDays(1);
-      count++;
     }
   }
 
