@@ -10,7 +10,10 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -97,7 +100,7 @@ public class UsgsApiQueryier {
 
 
     int page = 0;
-    List<String> allEventIds = new ArrayList<>();
+    TreeSet<String> allEventIds = new TreeSet<>();
     while (true) {
 
       int offset = page * pageSize + 1;
@@ -114,7 +117,7 @@ public class UsgsApiQueryier {
           String content = readContent(response);
           if (responseCode == 200) {
             FeatureCollection featureCollection = parseGeoJson(content, objectMapper);
-            List<String> eventIds = featureCollection.getFeatures().stream().map(GeoJson::getId).collect(Collectors.toList());
+            Set<String> eventIds = featureCollection.getFeatures().stream().map(GeoJson::getIds).flatMap(Collection::stream).collect(Collectors.toSet());
             allEventIds.addAll(eventIds);
             if (eventIds.isEmpty()) {
               LOGGER.info("No More Results: {} : {} : {}", uri);
@@ -136,7 +139,7 @@ public class UsgsApiQueryier {
 
     }
 
-    eventIdConsumer.accept(allEventIds);
+    eventIdConsumer.accept(new ArrayList<>(allEventIds));
   }
 
 

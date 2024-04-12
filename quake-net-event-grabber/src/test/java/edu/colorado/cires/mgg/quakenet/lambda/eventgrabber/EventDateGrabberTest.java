@@ -18,9 +18,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeSet;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -103,7 +105,7 @@ class EventDateGrabberTest {
 
 
 
-    List<String> eventIds = Arrays.asList(IOUtils.resourceToString("/usgs-response-2022-06-11.txt", StandardCharsets.UTF_8).split("\n"));
+    TreeSet<String> eventIds = new TreeSet<>(Arrays.asList(IOUtils.resourceToString("/usgs-response-2022-06-11.txt", StandardCharsets.UTF_8).split("\n")));
 
     verify(infoFileSaver, times(1)).readInfoFile(
         eq(bucketName),
@@ -112,7 +114,7 @@ class EventDateGrabberTest {
     verify(infoFileSaver, times(1)).saveInfoFile(
         eq(bucketName),
         eq("downloads/2022/06/2022-06-11/usgs-info-2022-06-11.json.gz"),
-        eq(InfoFile.Builder.builder().withDate(LocalDate.parse("2022-06-11")).withEventIds(eventIds).build()));
+        eq(InfoFile.Builder.builder().withDate(LocalDate.parse("2022-06-11")).withEventIds(new ArrayList<>(eventIds)).build()));
 
     eventIds.forEach(eventId -> verify(messageSender, times(1)).sendMessage(
         eq(topicArn),

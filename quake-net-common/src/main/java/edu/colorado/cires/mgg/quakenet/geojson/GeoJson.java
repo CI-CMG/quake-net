@@ -1,5 +1,8 @@
 package edu.colorado.cires.mgg.quakenet.geojson;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class GeoJson {
 
   private FeatureProperties properties;
@@ -19,5 +22,12 @@ public class GeoJson {
 
   public void setProperties(FeatureProperties properties) {
     this.properties = properties;
+  }
+
+  public Set<String> getIds(){
+    Set<String> ids = new HashSet<>();
+    ids.add(this.id);
+    ids.addAll(this.properties.getIds());
+    return ids;
   }
 }
