@@ -50,7 +50,7 @@ Resources:
   TriggerLambda:
     Type: AWS::Lambda::Function
     Properties:
-      Runtime: nodejs12.x
+      Runtime: nodejs18.x
       Role: !GetAtt TriggerLambdaRole.Arn
       Handler: index.handler
       Environment:
