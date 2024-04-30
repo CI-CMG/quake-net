@@ -177,6 +177,11 @@ public class LambdaPdfWriter {
     table.setHeaderRows(2);
 
     for (QnEvent event : events) {
+      
+      List<QnEvent> children = event.getChildren();
+      
+      //TODO add merge logic below
+      
       ZonedDateTime dt = event.getOriginTime().atZone(ZoneId.of("UTC"));
       table.addCell(new Phrase(String.format("%02d", dt.getDayOfMonth()), defaultFont));
       table.addCell(new Phrase(String.format("%02d", dt.getHour()), defaultFont));

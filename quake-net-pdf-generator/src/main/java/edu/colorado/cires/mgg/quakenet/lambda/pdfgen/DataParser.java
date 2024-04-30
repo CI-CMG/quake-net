@@ -1,5 +1,6 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
+import edu.colorado.cires.mgg.quakenet.geojson.GeoJson;
 import edu.colorado.cires.mgg.quakenet.model.QnCdi;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -68,8 +70,10 @@ public class DataParser {
           LocalDate date = LocalDate.parse(parts[3]);
           String eventId = parts[4];
           String file = parts[5];
-          if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId)) || file.equals(
-              String.format("event-cdi-%s-%s.xml.gz", date, eventId))) {
+          if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))
+              || file.equals(String.format("event-cdi-%s-%s.xml.gz", date, eventId))
+              || file.equals(String.format("event-details-%s-%s.json.gz", date, eventId))
+          ) {
             String k = key.replace("/" + file, String.format("/event-cdi-%s-%s.xml.gz", date, eventId));
             KeySet keySet = results.get(k);
             if (keySet == null) {
@@ -78,6 +82,14 @@ public class DataParser {
             }
             if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))) {
               keySet.setDetailsKey(key);
+            } else if (file.equals(String.format("event-details-%s-%s.json.gz", date, eventId))) {
+              GeoJson geoJson = dataWriter.readJson(properties.getBucketName(), key).orElseThrow(() -> new IllegalStateException("Unable to read " + key));
+              Set<String> ids = new LinkedHashSet<>();
+              if (geoJson.getProperties().getIds() != null) {
+                ids.addAll(geoJson.getProperties().getIds());
+                ids.remove(geoJson.getId());
+              }
+              keySet.setChildEventIds(new ArrayList<>(ids));
             } else {
               keySet.setCdiKey(key);
             }

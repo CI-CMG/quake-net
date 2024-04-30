@@ -38,8 +38,8 @@ public class PdfGenLambda implements RequestHandler<SQSEvent, SQSBatchResponse> 
   static {
     properties = new PdfGenProperties();
     properties.setBucketName(downloadBucket);
-    dataWriter = new DataOperations(s3, s3Client);
-    dataParser = new DataParser(properties, dataWriter, (bucketName, prefix) -> new BucketIterator(s3Client, bucketName, prefix));
+    dataWriter = new DataOperations(s3, s3Client, objectMapper);
+    dataParser = new DataParser(properties, dataWriter, (bucketName, prefix) -> new BucketIterator(s3Client, bucketName, prefix), objectMapper);
     executor = new PdfExecutor(properties, dataParser, dataWriter, new InfoFileS3Actions(s3, s3Client, objectMapper), Instant::now);
   }
 
