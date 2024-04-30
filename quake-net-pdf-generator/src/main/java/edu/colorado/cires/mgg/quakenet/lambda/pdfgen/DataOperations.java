@@ -1,6 +1,8 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
+import edu.colorado.cires.mgg.quakenet.geojson.GeoJson;
 import edu.colorado.cires.mgg.quakenet.s3.util.S3FileUtilities;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import java.io.IOException;
@@ -15,8 +17,10 @@ public class DataOperations {
 
 
   private final S3FileUtilities fileUploader;
+  private final ObjectMapper objectMapper;
 
-  public DataOperations(S3ClientMultipartUpload s3, S3Client s3Client) {
+  public DataOperations(S3ClientMultipartUpload s3, S3Client s3Client, ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
     fileUploader = new S3FileUtilities(s3, s3Client);
   }
 
@@ -44,6 +48,15 @@ public class DataOperations {
     });
   }
 
+  public Optional<GeoJson> readJson(String bucketName, String key) {
+    return fileUploader.readFile(bucketName, key, in -> {
+      try {
+        return objectMapper.readValue(in, GeoJson.class);
+      } catch (IOException e) {
+        throw new IllegalStateException("Unable to parse geojson", e);
+      }
+    });
+  }
 
   public Optional<Quakeml> readQuakeMl(String bucketName, String key) {
     return fileUploader.readFile(bucketName, key, in -> {

@@ -10,6 +10,8 @@ import java.util.Map;
 public class QnEvent {
 
   private String eventId;
+  private List<String> childIds = new ArrayList<>(0);
+  private List<QnEvent> children = new ArrayList<>(0);
   private String earthquakeName;
   private String flinnEngdahlRegion;
   private String regionName;
@@ -25,6 +27,27 @@ public class QnEvent {
   private List<String> comments = new ArrayList<>();
   private Map<String, List<String>> otherDescriptions = new HashMap<>();
 
+  public List<String> getChildIds() {
+    return childIds;
+  }
+
+  public void setChildIds(List<String> childIds) {
+    if (childIds == null) {
+      childIds = new ArrayList<>(0);
+    }
+    this.childIds = childIds;
+  }
+
+  public List<QnEvent> getChildren() {
+    return children;
+  }
+
+  public void setChildren(List<QnEvent> children) {
+    if (children == null) {
+      children = new ArrayList<>(0);
+    }
+    this.children = children;
+  }
 
   public String getFlinnEngdahlRegion() {
     return flinnEngdahlRegion;

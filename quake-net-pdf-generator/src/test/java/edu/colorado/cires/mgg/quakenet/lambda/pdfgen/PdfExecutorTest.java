@@ -125,7 +125,7 @@ class PdfExecutorTest {
 
     InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
     when(infoFileS3Actions.readReportInfoFile(eq(bucketName), eq("reports/2020/01/report-info-2020-01.json.gz"))).thenReturn(Optional.of(reportInfoFile));
-    DataParser dataParser = new DataParser(properties, dataOperations, bucketIteratorFactory);
+    DataParser dataParser = new DataParser(properties, dataOperations, bucketIteratorFactory, objectMapper);
     PdfExecutor executor = new PdfExecutor(properties, dataParser, dataOperations, infoFileS3Actions, () -> now);
 
     ReportGenerateMessage message = ReportGenerateMessage.Builder.builder().withYear(2020).withMonth(1).build();
