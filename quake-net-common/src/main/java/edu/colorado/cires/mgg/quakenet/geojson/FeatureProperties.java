@@ -2,13 +2,14 @@ package edu.colorado.cires.mgg.quakenet.geojson;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class FeatureProperties {
 
   private Products products;
   Set<String> ids;
+  private String net;
+  private String code;
   public Set<String> getIds() {
     return ids;
   }
@@ -21,7 +22,25 @@ public class FeatureProperties {
     }
   }
 
+  public String getNet() {
+    return net;
+  }
 
+  public void setNet(String net) {
+    this.net = net == null ? "" : net;
+  }
+
+  public String getCode() {
+    return code;
+  }
+
+  public void setCode(String code) {
+    this.code = code == null ? "" : code;
+  }
+
+  public String getPrimary(){
+    return this.net + this.code;
+  }
 
   public Products getProducts() {
     return products;
