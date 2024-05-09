@@ -16,17 +16,23 @@ import java.util.Objects;
 public class InfoFile {
 
   private final LocalDate date;
+  private final List<String> primaryEventIds;
   private final List<String> eventIds;
   private final Map<String, Object> otherFields;
 
-  private InfoFile(LocalDate date, List<String> eventIds, Map<String, Object> otherFields) {
+  private InfoFile(LocalDate date, List<String> primaryEventIds, List<String> eventIds, Map<String, Object> otherFields) {
     this.date = date;
+    this.primaryEventIds = Collections.unmodifiableList(new ArrayList<>(primaryEventIds));
     this.eventIds = Collections.unmodifiableList(new ArrayList<>(eventIds));
     this.otherFields = Collections.unmodifiableMap(new HashMap<>(otherFields));
   }
 
   public LocalDate getDate() {
     return date;
+  }
+
+  public List<String> getPrimaryEventIds() {
+    return primaryEventIds;
   }
 
   public List<String> getEventIds() {
@@ -47,19 +53,20 @@ public class InfoFile {
       return false;
     }
     InfoFile infoFile = (InfoFile) o;
-    return Objects.equals(date, infoFile.date) && Objects.equals(eventIds, infoFile.eventIds) && Objects.equals(
-        otherFields, infoFile.otherFields);
+    return Objects.equals(date, infoFile.date) && Objects.equals(primaryEventIds, infoFile.primaryEventIds)
+        && Objects.equals(eventIds, infoFile.eventIds) && Objects.equals(otherFields, infoFile.otherFields);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(date, eventIds, otherFields);
+    return Objects.hash(date, primaryEventIds, eventIds, otherFields);
   }
 
   @Override
   public String toString() {
     return "InfoFile{" +
         "date=" + date +
+        ", primaryEventIds=" + primaryEventIds +
         ", eventIds=" + eventIds +
         ", otherFields=" + otherFields +
         '}';
@@ -76,6 +83,7 @@ public class InfoFile {
     }
 
     private LocalDate date;
+    private List<String> primaryEventIds = new ArrayList<>(0);
     private List<String> eventIds = new ArrayList<>(0);
     private Map<String, Object> otherFields = new HashMap<>();
 
@@ -92,6 +100,14 @@ public class InfoFile {
 
     public Builder withDate(LocalDate date) {
       this.date = date;
+      return this;
+    }
+
+    public Builder withPrimaryEventIds(List<String> primaryEventIds) {
+      if(primaryEventIds == null) {
+        primaryEventIds = new ArrayList<>(0);
+      }
+      this.primaryEventIds = primaryEventIds;
       return this;
     }
 
@@ -119,7 +135,7 @@ public class InfoFile {
     }
 
     public InfoFile build() {
-      return new InfoFile(date, eventIds, otherFields);
+      return new InfoFile(date, primaryEventIds, eventIds, otherFields);
     }
   }
 }

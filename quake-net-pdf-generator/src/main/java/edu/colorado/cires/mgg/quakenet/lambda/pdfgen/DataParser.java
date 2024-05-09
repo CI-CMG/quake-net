@@ -3,6 +3,7 @@ package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 import edu.colorado.cires.mgg.quakenet.geojson.GeoJson;
 import edu.colorado.cires.mgg.quakenet.model.QnCdi;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import gov.noaa.ncei.xmlns.cdidata.Location;
 import java.time.Instant;
@@ -45,11 +46,14 @@ public class DataParser {
   private final PdfGenProperties properties;
   private final DataOperations dataWriter;
   private final BucketIteratorFactory bucketIteratorFactory;
+  private final InfoFileS3Actions infoFileS3Actions;
 
-  public DataParser(PdfGenProperties properties, DataOperations dataWriter, BucketIteratorFactory bucketIteratorFactory) {
+  public DataParser(PdfGenProperties properties, DataOperations dataWriter, BucketIteratorFactory bucketIteratorFactory,
+      InfoFileS3Actions infoFileS3Actions) {
     this.properties = properties;
     this.dataWriter = dataWriter;
     this.bucketIteratorFactory = bucketIteratorFactory;
+    this.infoFileS3Actions = infoFileS3Actions;
   }
 
   private boolean isReportExists(int year, int month) {
@@ -73,6 +77,7 @@ public class DataParser {
           if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))
               || file.equals(String.format("event-cdi-%s-%s.xml.gz", date, eventId))
               || file.equals(String.format("event-details-%s-%s.json.gz", date, eventId))
+              || file.equals(String.format("event-error-%s-%s.json.gz", date, eventId))
           ) {
             String k = key.replace("/" + file, String.format("/event-cdi-%s-%s.xml.gz", date, eventId));
             KeySet keySet = results.get(k);
@@ -80,20 +85,28 @@ public class DataParser {
               keySet = new KeySet();
               results.put(k, keySet);
             }
+            keySet.setEventId(eventId);
             if (file.equals(String.format("event-details-%s-%s.xml.gz", date, eventId))) {
               keySet.setDetailsKey(key);
             } else if (file.equals(String.format("event-details-%s-%s.json.gz", date, eventId))) {
-              GeoJson geoJson = dataWriter.readJson(properties.getBucketName(), key).orElseThrow(() -> new IllegalStateException("Unable to read " + key));
+              GeoJson geoJson = dataWriter.readJson(properties.getBucketName(), key)
+                  .orElseThrow(() -> new IllegalStateException("Unable to read " + key));
               Set<String> ids = new LinkedHashSet<>();
               if (geoJson.getProperties().getIds() != null) {
                 ids.addAll(geoJson.getProperties().getIds());
-                ids.remove(geoJson.getId());
+                ids.remove(eventId);
               }
+              keySet.setPrimary(geoJson.getProperties().getPrimary().equals(eventId));
               keySet.setChildEventIds(new ArrayList<>(ids));
+              keySet.setEventError(false);
+            } else if(file.equals(String.format("event-error-%s-%s.json.gz", date, eventId))) {
+              keySet.setPrimary(false);
+              keySet.setEventError(true);
             } else {
               keySet.setCdiKey(key);
             }
           }
+
 
         }
       }

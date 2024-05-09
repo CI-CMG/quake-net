@@ -6,7 +6,7 @@ import java.util.Set;
 public class GeoJson {
 
   private FeatureProperties properties;
-  private String id;
+  private String id; // id in json file not always the eventId - sometimes it contains the parent eventId
 
   public String getId() {
     return id;
@@ -26,7 +26,6 @@ public class GeoJson {
 
   public Set<String> getIds(){
     Set<String> ids = new HashSet<>();
-    ids.add(this.id);
     ids.addAll(this.properties.getIds());
     return ids;
   }
