@@ -1,6 +1,7 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
 import com.lowagie.text.DocumentException;
+import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
@@ -63,18 +64,27 @@ public class PdfExecutor {
     LOGGER.info("Number of events for {}-{} = {}", message.getYear(), message.getMonth(), keySets.size());
     Map<String, QnEvent> events = new LinkedHashMap<>();
     for (KeySet keySet : keySets) {
-      Quakeml quakeml = dataOperations.readQuakeMl(properties.getBucketName(), keySet.getDetailsKey())
-          .orElseThrow(() -> new RuntimeException("Unable to read quake details: " + keySet.getDetailsKey()));
-      Optional<Cdidata> cdidata;
-      if (keySet.getCdiKey() != null) {
-        cdidata = dataOperations.readCdi(properties.getBucketName(), keySet.getCdiKey());
-      } else {
-        cdidata = Optional.empty();
+      QnEvent event;
+      if (keySet.isEventError()) {
+        event = new QnEvent();
+      }else {
+          Quakeml quakeml = dataOperations.readQuakeMl(properties.getBucketName(), keySet.getDetailsKey())
+              .orElseThrow(() -> new RuntimeException("Unable to read quake details: " + keySet.getDetailsKey()));
+          Optional<Cdidata> cdidata;
+          if (keySet.getCdiKey() != null) {
+            cdidata = dataOperations.readCdi(properties.getBucketName(), keySet.getCdiKey());
+          } else {
+            cdidata = Optional.empty();
+          }
+          event = DataParser.parseQuakeDetails(quakeml);
+          cdidata.ifPresent(data -> DataParser.enrichCdi(event, data));
+          if (keySet.isPrimary()) {
+            event.setChildIds(keySet.getChildEventIds());
+          }
       }
-      QnEvent event = DataParser.parseQuakeDetails(quakeml);
-      cdidata.ifPresent(data -> DataParser.enrichCdi(event, data));
-      event.setChildIds(keySet.getChildEventIds());
-      events.put(event.getEventId(), event);
+      event.setEventId(keySet.getEventId());
+      event.setEventError(keySet.isEventError());
+      events.put(keySet.getEventId(), event);
     }
 
     Set<String> toRemove = new HashSet<>();
@@ -85,10 +95,10 @@ public class PdfExecutor {
         if (child == null) {
           throw new IllegalStateException("Unable to find child with ID " + childId);
         } else {
-          event.getChildren().add(child);
-          if (!toRemove.add(childId)) {
-            throw new IllegalStateException("Child with ID " + childId + " was associated with multiple parents");
+          if (!child.isEventError()) {
+            event.getChildren().add(child);
           }
+          toRemove.add(childId);
         }
       }
     }

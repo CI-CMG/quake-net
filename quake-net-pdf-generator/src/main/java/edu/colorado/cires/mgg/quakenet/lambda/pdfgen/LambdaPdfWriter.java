@@ -19,23 +19,34 @@ import java.io.OutputStream;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
+import software.amazon.awssdk.utils.StringUtils;
 
 public class LambdaPdfWriter {
 
-  private static String getRegion(QnEvent event) {
-    if (event.getFlinnEngdahlRegion() != null && !event.getFlinnEngdahlRegion().isEmpty()) {
-      return event.getFlinnEngdahlRegion();
+  private static String getRegion(List<QnEvent> events) {
+    Set<String> regions = new LinkedHashSet<>();
+    for (QnEvent event : events) {
+      String region = null;
+      if (event.getFlinnEngdahlRegion() != null && !event.getFlinnEngdahlRegion().isEmpty()) {
+        region = event.getFlinnEngdahlRegion();
+      }
+      if (event.getEarthquakeName() != null && !event.getEarthquakeName().isEmpty()) {
+        region = event.getEarthquakeName();
+      }
+      if (event.getRegionName() != null && !event.getRegionName().isEmpty()) {
+        region = event.getRegionName();
+      }
+      if (StringUtils.isNotBlank(region)){
+        regions.add(region);
+      }
     }
-    if (event.getEarthquakeName() != null && !event.getEarthquakeName().isEmpty()) {
-      return event.getEarthquakeName();
-    }
-    if (event.getRegionName() != null && !event.getRegionName().isEmpty()) {
-      return event.getRegionName();
-    }
-    return "";
+    return String.join("\n ", regions);
   }
 
   private static String getFeltAt(QnCdi cdi) {
@@ -80,26 +91,44 @@ public class LambdaPdfWriter {
     return sb.toString();
   }
 
-  private static String getFeltAt(QnEvent event) {
-    StringBuilder sb = new StringBuilder();
-    event.getCdis().forEach(cdi -> {
-      sb.append(getFeltAt(cdi)).append("\n");
-    });
-    return sb.toString();
+  private static String getFeltAt(List<QnEvent> events) {
+    Set<String> cdis = new LinkedHashSet<>();
+    for(QnEvent event:events ) {
+      event.getCdis().forEach(cdi -> {
+        if (StringUtils.isNotBlank(getFeltAt(cdi))){
+          cdis.add(getFeltAt(cdi));
+        }
+      });
+    }
+    return String.join("\n ", cdis);
   }
 
-  private static String getComments(QnEvent event) {
-    StringBuilder sb = new StringBuilder();
-    event.getComments().forEach(comment -> sb.append(comment).append("\n"));
-    if (event.getFeltDescription() != null && !event.getFeltDescription().isEmpty()) {
-      sb.append(event.getFeltDescription()).append("\n");
-    }
-    for (Entry<String, List<String>> entry : event.getOtherDescriptions().entrySet()) {
-      for (String comment : entry.getValue()) {
-        sb.append(entry.getKey()).append(": ").append(comment).append("\n");
+  private static String getComments(List<QnEvent> events) {
+    Set<String> comments = new LinkedHashSet<>();
+    for(QnEvent event:events) {
+      StringBuilder sb = new StringBuilder();
+      event.getComments().forEach(comment -> sb.append(comment).append("\n"));
+      if (event.getFeltDescription() != null && !event.getFeltDescription().isEmpty()) {
+        sb.append(event.getFeltDescription()).append("\n");
+      }
+      for (Entry<String, List<String>> entry : event.getOtherDescriptions().entrySet()) {
+        for (String comment : entry.getValue()) {
+          sb.append(entry.getKey()).append(": ").append(comment).append("\n");
+        }
+      }
+      if (StringUtils.isNotBlank(sb.toString())){
+        comments.add(sb.toString());
       }
     }
-    return sb.toString();
+    return String.join("\n---\n", comments);
+  }
+
+  private static String getIds(List<QnEvent> events){
+    Set<String> ids = new LinkedHashSet<>();
+    for(QnEvent event:events){
+      ids.add(event.getEventId());
+    }
+    return String.join("\n", ids);
   }
 
   private static String depthToKm(Double depthM) {
@@ -155,6 +184,7 @@ public class LambdaPdfWriter {
     columns.put("Region", 25);
     columns.put("Felt At", 30);
     columns.put("Other Info", 20);
+    columns.put("IDs", 20);
     int[] widths = columns.values().stream().mapToInt(Integer::intValue).toArray();
 
     PdfPTable table = new PdfPTable(columns.size());
@@ -177,11 +207,12 @@ public class LambdaPdfWriter {
     table.setHeaderRows(2);
 
     for (QnEvent event : events) {
-      
-      List<QnEvent> children = event.getChildren();
-      
-      //TODO add merge logic below
-      
+      if (event.getEventId().equals("us10004ar8")){
+        System.out.println("found");
+      }
+      List<QnEvent> allEvents = new ArrayList<>();
+      allEvents.add(event);
+      allEvents.addAll(event.getChildren());
       ZonedDateTime dt = event.getOriginTime().atZone(ZoneId.of("UTC"));
       table.addCell(new Phrase(String.format("%02d", dt.getDayOfMonth()), defaultFont));
       table.addCell(new Phrase(String.format("%02d", dt.getHour()), defaultFont));
@@ -192,9 +223,10 @@ public class LambdaPdfWriter {
       table.addCell(new Phrase(depthToKm(event.getDepth()), defaultFont));
       table.addCell(new Phrase(event.getMagnitude() == null ? "" : String.format("%.1f", event.getMagnitude()), defaultFont));
       table.addCell(new Phrase(event.getMagnitudeType() == null ? "" : event.getMagnitudeType(), defaultFont));
-      table.addCell(new Phrase(getRegion(event), defaultFont));
-      table.addCell(new Phrase(getFeltAt(event), defaultFont));
-      table.addCell(new Phrase(getComments(event), defaultFont));
+      table.addCell(new Phrase(getRegion(allEvents), defaultFont));
+      table.addCell(new Phrase(getFeltAt(allEvents), defaultFont));
+      table.addCell(new Phrase(getComments(allEvents), defaultFont));
+      table.addCell(new Phrase(getIds(allEvents), defaultFont));
     }
 
     document.add(table);

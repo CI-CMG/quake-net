@@ -10,6 +10,7 @@ import java.util.Map;
 public class QnEvent {
 
   private String eventId;
+  private boolean eventError = false;
   private List<String> childIds = new ArrayList<>(0);
   private List<QnEvent> children = new ArrayList<>(0);
   private String earthquakeName;
@@ -26,6 +27,14 @@ public class QnEvent {
   private List<QnCdi> cdis = new ArrayList<>();
   private List<String> comments = new ArrayList<>();
   private Map<String, List<String>> otherDescriptions = new HashMap<>();
+
+  public boolean isEventError() {
+    return eventError;
+  }
+
+  public void setEventError(boolean eventError) {
+    this.eventError = eventError;
+  }
 
   public List<String> getChildIds() {
     return childIds;

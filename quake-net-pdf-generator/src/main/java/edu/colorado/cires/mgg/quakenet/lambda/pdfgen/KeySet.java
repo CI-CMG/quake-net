@@ -8,7 +8,10 @@ public class KeySet implements Comparable<KeySet>{
 
   private String detailsKey;
   private String cdiKey;
+  private String eventId; // parsed from file name
   private List<String> childEventIds = new ArrayList<>(0);
+  private boolean primary;
+  private boolean eventError = false;
 
   public void setDetailsKey(String detailsKey) {
     this.detailsKey = detailsKey;
@@ -26,6 +29,14 @@ public class KeySet implements Comparable<KeySet>{
     return cdiKey;
   }
 
+  public String getEventId() {
+    return eventId;
+  }
+
+  public void setEventId(String eventId) {
+    this.eventId = eventId;
+  }
+
   public List<String> getChildEventIds() {
     return childEventIds;
   }
@@ -35,6 +46,22 @@ public class KeySet implements Comparable<KeySet>{
       childEventIds = new ArrayList<>(0);
     }
     this.childEventIds = childEventIds;
+  }
+
+  public boolean isPrimary() {
+    return primary;
+  }
+
+  public void setPrimary(boolean primary) {
+    this.primary = primary;
+  }
+
+  public boolean isEventError() {
+    return eventError;
+  }
+
+  public void setEventError(boolean eventError) {
+    this.eventError = eventError;
   }
 
   @Override
@@ -47,7 +74,7 @@ public class KeySet implements Comparable<KeySet>{
     }
     KeySet keySet = (KeySet) o;
     return Objects.equals(detailsKey, keySet.detailsKey) && Objects.equals(cdiKey, keySet.cdiKey) && Objects.equals(
-        childEventIds, keySet.childEventIds);
+        childEventIds, keySet.childEventIds) && Objects.equals(eventId, keySet.eventId);
   }
 
   @Override
