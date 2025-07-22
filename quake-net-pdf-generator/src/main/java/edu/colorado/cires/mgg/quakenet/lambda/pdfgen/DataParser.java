@@ -4,6 +4,7 @@ import edu.colorado.cires.mgg.quakenet.geojson.GeoJson;
 import edu.colorado.cires.mgg.quakenet.model.QnCdi;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import gov.noaa.ncei.xmlns.cdidata.Cdi;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import gov.noaa.ncei.xmlns.cdidata.Location;
 import java.time.Instant;
@@ -118,23 +119,27 @@ public class DataParser {
   }
 
   public static void enrichCdi(QnEvent event, Cdidata cdidata) {
-    if (cdidata.getCdi() != null && cdidata.getCdi().getLocations() != null && cdidata.getCdi().getLocations().size() > 0) {
-      List<QnCdi> cdis = new ArrayList<>(cdidata.getCdi().getLocations().size());
-      for (Location location : cdidata.getCdi().getLocations()) {
-        QnCdi cdi = new QnCdi();
-        cdi.setCdi(location.getCdi());
-        cdi.setNumResp(location.getNresp());
-        cdi.setDistKm(location.getDist());
-        cdi.setLatitude(location.getLat());
-        cdi.setLongitude(location.getLon());
-        cdi.setName(location.getName());
-        cdi.setState(location.getState());
-        cdi.setCode(location.getLocationName());
-        cdis.add(cdi);
+    List<QnCdi> cdis = new ArrayList<>();
+    if (cdidata.getCdis() != null){
+      for (Cdi cdi: cdidata.getCdis()) {
+        if (cdi != null && cdi.getLocations() != null && cdi.getLocations().size() > 0){
+          for (Location location : cdi.getLocations()) {
+            QnCdi qnCdi = new QnCdi();
+            qnCdi.setCdi(location.getCdi());
+            qnCdi.setNumResp(location.getNresp());
+            qnCdi.setDistKm(location.getDist());
+            qnCdi.setLatitude(location.getLat());
+            qnCdi.setLongitude(location.getLon());
+            qnCdi.setName(location.getName());
+            qnCdi.setState(location.getState());
+            qnCdi.setCode(location.getLocationName());
+            cdis.add(qnCdi);
+          }
+        }
       }
-      Collections.sort(cdis, (c1, c2) -> Double.compare(c2.getCdi(), c1.getCdi()));
-      event.setCdis(cdis.subList(0, Math.min(MAX_CDIS, cdis.size())));
     }
+    Collections.sort(cdis, (c1, c2) -> Double.compare(c2.getCdi(), c1.getCdi()));
+    event.setCdis(cdis.subList(0, Math.min(MAX_CDIS, cdis.size())));
   }
 
   public static QnEvent parseQuakeDetails(Quakeml quakeml) {
