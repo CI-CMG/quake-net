@@ -27,7 +27,7 @@
 
   <xs:complexType name="cdidata">
     <xs:sequence>
-      <xs:element name="cdi" type="cdi"/>
+      <xs:element name="cdi" minOccurs="0" maxOccurs="unbounded" type="cdi"/>
     </xs:sequence>
   </xs:complexType>
 
