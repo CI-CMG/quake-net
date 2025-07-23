@@ -119,7 +119,7 @@ public class DataParser {
   }
 
   public static void enrichCdi(QnEvent event, Cdidata cdidata) {
-    List<QnCdi> cdis = new ArrayList<>();
+    Set<QnCdi> cdiSet = new HashSet<>();
     if (cdidata.getCdis() != null){
       for (Cdi cdi: cdidata.getCdis()) {
         if (cdi != null && cdi.getLocations() != null && cdi.getLocations().size() > 0){
@@ -133,11 +133,12 @@ public class DataParser {
             qnCdi.setName(location.getName());
             qnCdi.setState(location.getState());
             qnCdi.setCode(location.getLocationName());
-            cdis.add(qnCdi);
+            cdiSet.add(qnCdi);
           }
         }
       }
     }
+    List<QnCdi> cdis = new ArrayList<>(cdiSet);
     Collections.sort(cdis, (c1, c2) -> Double.compare(c2.getCdi(), c1.getCdi()));
     event.setCdis(cdis.subList(0, Math.min(MAX_CDIS, cdis.size())));
   }
