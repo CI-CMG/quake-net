@@ -9,7 +9,9 @@
 
 
   <artifactId>quake-net-cdidata-jaxb</artifactId>
-
+  <properties>
+    <project-root>${project.parent.basedir}</project-root>
+  </properties>
 
   <dependencies>
     <dependency>

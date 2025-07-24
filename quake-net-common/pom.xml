@@ -9,7 +9,9 @@
   </parent>
 
   <artifactId>quake-net-common</artifactId>
-
+  <properties>
+    <project-root>${project.parent.basedir}</project-root>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

@@ -9,7 +9,9 @@
   </parent>
 
   <artifactId>quake-net-report-initiator</artifactId>
-
+  <properties>
+    <project-root>${project.parent.basedir}</project-root>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>edu.colorado.cires.mgg.quake-net</groupId>

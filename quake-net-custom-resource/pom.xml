@@ -11,6 +11,9 @@
 
   <artifactId>quake-net-custom-resource</artifactId>
 
+  <properties>
+    <project-root>${project.parent.basedir}</project-root>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>edu.colorado.cires.mgg.quake-net</groupId>

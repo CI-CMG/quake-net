@@ -9,7 +9,9 @@
   </parent>
 
   <artifactId>quake-net-s3-utils</artifactId>
-
+  <properties>
+    <project-root>${project.parent.basedir}</project-root>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>commons-io</groupId>

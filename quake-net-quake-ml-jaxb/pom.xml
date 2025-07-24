@@ -8,7 +8,9 @@
   </parent>
 
   <artifactId>quake-net-quake-ml-jaxb</artifactId>
-
+  <properties>
+    <project-root>${project.parent.basedir}</project-root>
+  </properties>
 
   <dependencies>
     <dependency>
