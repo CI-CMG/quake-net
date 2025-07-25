@@ -16,9 +16,6 @@
     <log4j.version>2.18.0</log4j.version>
     <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
     <project-root>${project.basedir}</project-root>
-    <sign.keyId />
-    <sign.keyPass />
-    <sign.keyFile />
     <git.username />
     <git.password />
   </properties>
@@ -344,24 +341,24 @@
               </execution>
             </executions>
           </plugin>
-          <plugin>
-            <groupId>org.simplify4u.plugins</groupId>
-            <artifactId>sign-maven-plugin</artifactId>
-            <version>1.0.0</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-                <configuration>
-                  <skipNoKey>false</skipNoKey>
-                  <keyId>${sign.keyId}</keyId>
-                  <keyPass>${sign.keyPass}</keyPass>
-                  <keyFile>${sign.keyFile}</keyFile>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
+<!--          <plugin>-->
+<!--            <groupId>org.simplify4u.plugins</groupId>-->
+<!--            <artifactId>sign-maven-plugin</artifactId>-->
+<!--            <version>1.0.0</version>-->
+<!--            <executions>-->
+<!--              <execution>-->
+<!--                <goals>-->
+<!--                  <goal>sign</goal>-->
+<!--                </goals>-->
+<!--                <configuration>-->
+<!--                  <skipNoKey>false</skipNoKey>-->
+<!--                  <keyId>${sign.keyId}</keyId>-->
+<!--                  <keyPass>${sign.keyPass}</keyPass>-->
+<!--                  <keyFile>${sign.keyFile}</keyFile>-->
+<!--                </configuration>-->
+<!--              </execution>-->
+<!--            </executions>-->
+<!--          </plugin>-->
         </plugins>
       </build>
     </profile>
