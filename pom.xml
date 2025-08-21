@@ -18,6 +18,7 @@
     <project-root>${project.basedir}</project-root>
     <git.username />
     <git.password />
+    <netty.version>4.1.124.Final</netty.version>
   </properties>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -187,27 +188,27 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-common</artifactId>
-        <version>4.1.123.Final</version>
+        <version>${netty.version}</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-handler</artifactId>
-        <version>4.1.123.Final</version>
+        <version>${netty.version}</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-transport</artifactId>
-        <version>4.1.123.Final</version>
+        <version>${netty.version}</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-transport-classes-epoll</artifactId>
-        <version>4.1.123.Final</version>
+        <version>${netty.version}</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec-http2</artifactId>
-        <version>4.1.123.Final</version>
+        <version>${netty.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
