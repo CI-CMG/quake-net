@@ -14,21 +14,19 @@ import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import gov.noaa.ncei.xmlns.cdidata.Cdidata;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -72,7 +70,7 @@ class PdfExecutorTest {
     PdfGenProperties properties = new PdfGenProperties();
     properties.setBucketName(bucketName);
 
-    DataOperations dataOperations = mock(DataOperations.class);
+    DataOperationsImpl dataOperations = mock(DataOperationsImpl.class);
 
     when(dataOperations.isReportExists(eq(bucketName), eq("reports/2020/01/earthquake-info-2020-01.pdf"))).thenReturn(false);
     when(dataOperations.readQuakeMl(eq(bucketName), any())).thenAnswer(new Answer<Optional<Quakeml>>() {
@@ -90,7 +88,7 @@ class PdfExecutorTest {
       }
     });
 
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.readInfoFile(eq(bucketName), any())).thenAnswer(new Answer<Optional<InfoFile>>() {
       @Override
       public Optional<InfoFile> answer(InvocationOnMock invocationOnMock) throws Throwable {

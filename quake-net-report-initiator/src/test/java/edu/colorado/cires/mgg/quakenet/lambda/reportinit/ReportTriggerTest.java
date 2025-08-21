@@ -13,6 +13,7 @@ import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -34,7 +35,7 @@ class ReportTriggerTest {
 
     MessageSender messageSender = mock(MessageSender.class);
     BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
 
     List<String> s3ObjectList = Arrays.asList(
         "downloads/2012/05/2012-05-01/usgs-info-2012-05-01.json.gz",
@@ -249,7 +250,7 @@ class ReportTriggerTest {
 
     MessageSender messageSender = mock(MessageSender.class);
     BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
 
     List<String> s3ObjectList = Arrays.asList(
         "downloads/2012/05/2012-05-01/usgs-info-2012-05-01.json.gz",
@@ -466,7 +467,7 @@ class ReportTriggerTest {
 
     MessageSender messageSender = mock(MessageSender.class);
     BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
 
     List<String> s3ObjectList = Arrays.asList(
         "downloads/2012/05/2012-05-01/usgs-info-2012-05-01.json.gz",
@@ -680,7 +681,7 @@ class ReportTriggerTest {
 
     MessageSender messageSender = mock(MessageSender.class);
     BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
 
     List<String> s3ObjectList = Arrays.asList(
         "downloads/2012/05/2012-05-01/usgs-info-2012-05-01.json.gz",
@@ -882,7 +883,7 @@ class ReportTriggerTest {
 
     MessageSender messageSender = mock(MessageSender.class);
     BucketIteratorFactory bucketIteratorFactory = mock(BucketIteratorFactory.class);
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
 
     List<String> s3ObjectList = Arrays.asList(
         "downloads/2012/05/2012-05-01/usgs-info-2012-05-01.json.gz",

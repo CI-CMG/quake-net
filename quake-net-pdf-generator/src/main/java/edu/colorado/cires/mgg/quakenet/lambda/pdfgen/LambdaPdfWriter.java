@@ -207,9 +207,6 @@ public class LambdaPdfWriter {
     table.setHeaderRows(2);
 
     for (QnEvent event : events) {
-      if (event.getEventId().equals("us10004ar8")){
-        System.out.println("found");
-      }
       List<QnEvent> allEvents = new ArrayList<>();
       allEvents.add(event);
       allEvents.addAll(event.getChildren());

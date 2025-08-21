@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.colorado.cires.cmg.s3out.AwsS3ClientMultipartUpload;
 import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import edu.colorado.cires.mgg.quakenet.s3.util.S3FileUtilities;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class InitiatorLambda implements RequestStreamHandler {
     properties.setTopicArn(topicArn);
     properties.setMaxMonthsPerTrigger(maxMonthsPerTrigger);
     properties.setRetryQuietTimeMinutes(retryQuietTimeMinutes);
-    InfoFileS3Actions infoFileS3Actions = new InfoFileS3Actions(s3, s3Client, objectMapper);
+    InfoFileS3Actions infoFileS3Actions = new InfoFileS3ActionsImpl(s3, s3Client, objectMapper);
     S3FileUtilities s3FileUtilities = new S3FileUtilities(s3, s3Client);
     InfoFileSaver fileInfoSaver = new InfoFileSaver(s3, objectMapper);
     MessageSender messageSender = new MessageSender(snsClient, objectMapper);
