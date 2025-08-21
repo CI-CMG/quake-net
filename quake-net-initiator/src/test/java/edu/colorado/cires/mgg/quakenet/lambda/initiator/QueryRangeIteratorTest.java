@@ -10,6 +10,7 @@ import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -28,7 +29,7 @@ class QueryRangeIteratorTest {
     properties.setTopicArn(topicArn);
     properties.setMaxMonthsPerTrigger(366);
 
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     Instant now = Instant.now();
     QueryRangeIterator queryRangeIterator = new QueryRangeIterator(fileInfoSaver, messageSender, properties, () -> now, infoFileS3Actions);
     QueryRange queryRange = new QueryRange(LocalDate.parse("2022-06-11"), LocalDate.parse("2022-06-15"));
@@ -102,7 +103,7 @@ class QueryRangeIteratorTest {
     properties.setTopicArn(topicArn);
     properties.setMaxMonthsPerTrigger(366);
 
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     Instant now = Instant.now();
     QueryRangeIterator queryRangeIterator = new QueryRangeIterator(fileInfoSaver, messageSender, properties, () -> now, infoFileS3Actions);
     QueryRange queryRange = new QueryRange(LocalDate.parse("2024-02-27"), LocalDate.parse("2024-02-29"));

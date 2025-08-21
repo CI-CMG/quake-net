@@ -1,7 +1,6 @@
 package edu.colorado.cires.mgg.quakenet.lambda.pdfgen;
 
 import com.lowagie.text.DocumentException;
-import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.model.QnEvent;
@@ -67,20 +66,20 @@ public class PdfExecutor {
       QnEvent event;
       if (keySet.isEventError()) {
         event = new QnEvent();
-      }else {
-          Quakeml quakeml = dataOperations.readQuakeMl(properties.getBucketName(), keySet.getDetailsKey())
-              .orElseThrow(() -> new RuntimeException("Unable to read quake details: " + keySet.getDetailsKey()));
-          Optional<Cdidata> cdidata;
-          if (keySet.getCdiKey() != null) {
-            cdidata = dataOperations.readCdi(properties.getBucketName(), keySet.getCdiKey());
-          } else {
-            cdidata = Optional.empty();
-          }
-          event = DataParser.parseQuakeDetails(quakeml);
-          cdidata.ifPresent(data -> DataParser.enrichCdi(event, data));
-          if (keySet.isPrimary()) {
-            event.setChildIds(keySet.getChildEventIds());
-          }
+      } else {
+        Quakeml quakeml = dataOperations.readQuakeMl(properties.getBucketName(), keySet.getDetailsKey())
+            .orElseThrow(() -> new RuntimeException("Unable to read quake details: " + keySet.getDetailsKey()));
+        Optional<Cdidata> cdidata;
+        if (keySet.getCdiKey() != null) {
+          cdidata = dataOperations.readCdi(properties.getBucketName(), keySet.getCdiKey());
+        } else {
+          cdidata = Optional.empty();
+        }
+        event = DataParser.parseQuakeDetails(quakeml);
+        cdidata.ifPresent(data -> DataParser.enrichCdi(event, data));
+        if (keySet.isPrimary()) {
+          event.setChildIds(keySet.getChildEventIds());
+        }
       }
       event.setEventId(keySet.getEventId());
       event.setEventError(keySet.isEventError());
@@ -113,8 +112,14 @@ public class PdfExecutor {
     LOGGER.info("Writing PDF: {}-{}", message.getYear(), message.getMonth());
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     try {
-      LambdaPdfWriter.writePdf(events.values().stream().sorted(Comparator.comparing(QnEvent::getOriginTime)).collect(Collectors.toList()), message,
-          bos);
+      LambdaPdfWriter.writePdf(
+          events.values().stream()
+              .filter(qnEvent -> !qnEvent.isEventError())
+              .sorted(Comparator.comparing(QnEvent::getOriginTime))
+              .collect(Collectors.toList()),
+          message,
+          bos
+      );
     } catch (DocumentException e) {
       throw new IllegalStateException("An error occurred generating report", e);
     }

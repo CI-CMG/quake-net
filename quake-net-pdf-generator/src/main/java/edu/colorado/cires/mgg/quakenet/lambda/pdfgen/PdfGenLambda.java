@@ -12,6 +12,7 @@ import edu.colorado.cires.cmg.s3out.S3ClientMultipartUpload;
 import edu.colorado.cires.mgg.quakenet.message.ReportGenerateMessage;
 import edu.colorado.cires.mgg.quakenet.s3.util.BucketIterator;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -28,20 +29,20 @@ public class PdfGenLambda implements RequestHandler<SQSEvent, SQSBatchResponse> 
   private static final S3Client s3Client = S3Client.builder().build();
   private static final ObjectMapper objectMapper = ObjectMapperCreator.create();
   private static final S3ClientMultipartUpload s3 = AwsS3ClientMultipartUpload.builder().s3(S3Client.builder().build()).build();
-  private static final InfoFileS3Actions infoFileS3Actions = new InfoFileS3Actions(s3, s3Client, objectMapper);
+  private static final InfoFileS3Actions infoFileS3Actions = new InfoFileS3ActionsImpl(s3, s3Client, objectMapper);
 
   private static final PdfGenProperties properties;
   private static final DataParser dataParser;
-  private static final DataOperations dataWriter;
+  private static final DataOperationsImpl dataWriter;
   private static final PdfExecutor executor;
 
 
   static {
     properties = new PdfGenProperties();
     properties.setBucketName(downloadBucket);
-    dataWriter = new DataOperations(s3, s3Client, objectMapper);
+    dataWriter = new DataOperationsImpl(s3, s3Client, objectMapper);
     dataParser = new DataParser(properties, dataWriter, (bucketName, prefix) -> new BucketIterator(s3Client, bucketName, prefix), infoFileS3Actions);
-    executor = new PdfExecutor(properties, dataParser, dataWriter, new InfoFileS3Actions(s3, s3Client, objectMapper), Instant::now);
+    executor = new PdfExecutor(properties, dataParser, dataWriter, new InfoFileS3ActionsImpl(s3, s3Client, objectMapper), Instant::now);
   }
 
   @Override

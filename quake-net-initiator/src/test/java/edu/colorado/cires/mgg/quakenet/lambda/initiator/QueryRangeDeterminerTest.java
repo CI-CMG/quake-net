@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,7 +35,7 @@ class QueryRangeDeterminerTest {
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
       @Override
       public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -56,7 +57,7 @@ class QueryRangeDeterminerTest {
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("2013-01-01");
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenReturn(false);
     LocalDate now = LocalDate.parse("2017-01-20");
     QueryRangeDeterminer queryRangeDeterminer = new QueryRangeDeterminer(initiatorProperties, () -> now, infoFileS3Actions);
@@ -82,7 +83,7 @@ class QueryRangeDeterminerTest {
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
       @Override
       public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -113,7 +114,7 @@ class QueryRangeDeterminerTest {
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
       @Override
       public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -144,7 +145,7 @@ class QueryRangeDeterminerTest {
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
       @Override
       public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -174,7 +175,7 @@ class QueryRangeDeterminerTest {
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
       @Override
       public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -204,7 +205,7 @@ class QueryRangeDeterminerTest {
     InitiatorProperties initiatorProperties = new InitiatorProperties();
     initiatorProperties.setDownloadBucket(bucketName);
     initiatorProperties.setDefaultStartDate("1600-01-01");
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     when(infoFileS3Actions.isFileExists(eq(bucketName), any())).thenAnswer(new Answer<Boolean>() {
       @Override
       public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {

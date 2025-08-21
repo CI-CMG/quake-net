@@ -13,6 +13,7 @@ import edu.colorado.cires.mgg.quakenet.message.EventDetailGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.EventGrabberMessage;
 import edu.colorado.cires.mgg.quakenet.message.InfoFile;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import edu.colorado.cires.mgg.quakenet.util.ObjectMapperCreator;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,7 +21,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
 import okhttp3.HttpUrl;
@@ -71,7 +71,7 @@ class EventDateGrabberTest {
     properties.setTopicArn(topicArn);
     properties.setMinimumMagnitude(minMagnitude);
 
-    InfoFileS3Actions infoFileSaver = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileSaver = mock(InfoFileS3ActionsImpl.class);
     MessageSender messageSender = mock(MessageSender.class);
 
     when(infoFileSaver.readInfoFile(eq(bucketName), eq("downloads/2022/06/2022-06-11/usgs-info-2022-06-11.json.gz"))).thenReturn(Optional.of(infoFile));

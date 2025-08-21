@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import edu.colorado.cires.mgg.quakenet.message.ReportInfoFile;
 import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
+import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3ActionsImpl;
 import edu.colorado.cires.mgg.quakenet.s3.util.S3FileUtilities;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -51,7 +52,7 @@ class ReportRetryProcessorTest {
     initiatorProperties.setRetryQuietTimeMinutes(quietMinutes);
     LocalDate today = LocalDate.parse("2014-12-05");
     Instant now = today.atStartOfDay(ZoneId.of("UTC")).toInstant();
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     S3FileUtilities s3FileUtilities = mock(S3FileUtilities.class);
 
     when(s3FileUtilities.isFileExists(eq(bucketName), eq("reports/2013/01/earthquake-info-2013-01.pdf"))).thenReturn(false);
@@ -162,7 +163,7 @@ class ReportRetryProcessorTest {
     initiatorProperties.setRetryQuietTimeMinutes(quietMinutes);
     LocalDate today = LocalDate.parse("2014-12-05");
     Instant now = today.atStartOfDay(ZoneId.of("UTC")).toInstant();
-    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3Actions.class);
+    InfoFileS3Actions infoFileS3Actions = mock(InfoFileS3ActionsImpl.class);
     S3FileUtilities s3FileUtilities = mock(S3FileUtilities.class);
 
     when(s3FileUtilities.isFileExists(eq(bucketName), eq("reports/2013/01/earthquake-info-2013-01.pdf"))).thenReturn(false);
