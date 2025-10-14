@@ -8,9 +8,11 @@ import edu.colorado.cires.mgg.quakenet.s3.util.InfoFileS3Actions;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -53,13 +55,51 @@ public class ReportTrigger {
     }
   }
 
+  private static class EventIdComparator {
+    private final String eventId;
+    private final LocalDate date;
+
+    public EventIdComparator(String eventId, LocalDate date) {
+      this.eventId = eventId;
+      this.date = date;
+    }
+
+    public String getEventId() {
+      return eventId;
+    }
+
+    public LocalDate getDate() {
+      return date;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      EventIdComparator that = (EventIdComparator) o;
+      return Objects.equals(eventId, that.eventId) && Objects.equals(date, that.date);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(eventId, date);
+    }
+    @Override
+    public String toString() {
+      return "EventIdComparator{" +
+          "eventId='" + eventId + '\'' +
+          ", date=" + date +
+          '}';
+    }
+  }
   public void triggerReports(EventDetailGrabberMessage message) {
 
     LocalDate date = LocalDate.parse(message.getDate());
 
     ReportInfoFile reportInfoFile = getReportInfoFile(date);
     if (reportInfoFile != null) {
-      Set<String> expectedEventIds = new HashSet<>();
+      Set<EventIdComparator> expectedEventIds = new HashSet<>();
 
       YearMonth month = YearMonth.from(date);
       LocalDate start = month.atDay(1);
@@ -73,7 +113,11 @@ public class ReportTrigger {
       for (String key : infoKeys) {
         Optional<InfoFile> infoFile = infoFileS3Actions.readInfoFile(properties.getBucketName(), key);
         if (infoFile.isPresent()) {
-          expectedEventIds.addAll(infoFile.get().getEventIds());
+          List<EventIdComparator> eids = new ArrayList<>();
+          for (String eventId : infoFile.get().getEventIds()) {
+            eids.add(new EventIdComparator(eventId, infoFile.get().getDate()));
+          }
+          expectedEventIds.addAll(eids);
         } else {
           LOGGER.info("Missing: {}", key);
           hasAllFiles = false;
@@ -100,7 +144,7 @@ public class ReportTrigger {
             String eventId = parts[4];
             String file = parts[5];
             if (file.equals("event-details-" + fileDate + "-" + eventId + ".xml.gz") || file.equals("event-error-" + fileDate + "-" + eventId + ".json.gz")) {
-              expectedEventIds.remove(eventId);
+              expectedEventIds.remove(new EventIdComparator(eventId, LocalDate.parse(fileDate)));
             }
           }
         }
@@ -108,7 +152,8 @@ public class ReportTrigger {
         if (expectedEventIds.isEmpty()) {
           sendGenerateReportMessage(date.getYear(), date.getMonthValue(), reportInfoFile);
         } else {
-          LOGGER.info("Missing {} keys for {}-{}", expectedEventIds.size(), date.getYear(), date.getMonthValue());
+          LOGGER.info("Missing {} keys for {}-{} : {}", expectedEventIds.size(), date.getYear(), date.getMonthValue(),
+              new ArrayList<>(expectedEventIds).subList(0, Math.min(expectedEventIds.size(), 20)));
         }
       }
 
