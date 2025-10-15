@@ -25,6 +25,8 @@ jobs:
           ARTIFACTORY_API_KEY: ${{ secrets.ARTIFACTORY_API_KEY }}
           ARTIFACTORY_SNAPSHOT_URL: ${{ vars.ARTIFACTORY_SNAPSHOT_URL }}
           ARTIFACTORY_RELEASE_URL: ${{ vars.ARTIFACTORY_RELEASE_URL }}
+          OSS_INDEX_USERNAME: ${{ secrets.OSS_INDEX_USERNAME }}
+          OSS_INDEX_PASSWORD: ${{ secrets.OSS_INDEX_PASSWORD }}
       - name: notify dependencies
         run: |
           set -ex
