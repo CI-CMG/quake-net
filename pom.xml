@@ -297,6 +297,8 @@
             <version>12.1.3</version>
             <configuration>
               <failBuildOnCVSS>0</failBuildOnCVSS>
+              <ossIndexUsername>${env.OSS_INDEX_USERNAME}</ossIndexUsername>
+              <ossIndexPassword>${env.OSS_INDEX_PASSWORD}</ossIndexPassword>
               <suppressionFiles>
                 <suppressionFile>${project-root}/owasp-dep-check-suppression.xml</suppressionFile>
               </suppressionFiles>
